@@ -1,0 +1,11 @@
+source_file,source_sheet,source_row,report_period_start,report_period_end,property_total_rooms,business_date,adjustment_label_raw,occupancy_rate_reported,occupancy_rate_raw_values_observed,source_occurrences,merged_source_rows,rooms_sold,transient_rooms,group_rooms,day_use_rooms,comp_rooms,out_of_order_rooms,on_market_rooms,room_revenue_gross,adr_gross,revpar_gross,room_revenue_net,adr_net,revpar_net
+Block32023roomtypes.xls,RoomSales,298,2023-07-04,2023-10-03,60,2023-07-26,***,,0.0|1.7976931348623157e+308,2,298|299,0,0,0,0,0,0,0,670.9,0.0,0.0,670.9,0.0,0.0
+Block32023roomtypes.xls,RoomSales,1002,2023-07-04,2023-10-03,60,2023-09-18,***,,0.0|1.7976931348623157e+308,2,1002|1003,0,0,0,0,0,0,0,3058.0,0.0,0.0,-287.0,0.0,0.0
+Block 4 October 4 to December 31.xls,RoomSales,51,2023-10-04,2023-12-31,60,2023-10-07,***,,0.0|1.7976931348623157e+308,2,51|52,0,0,0,0,0,0,0,0.0,0.0,0.0,-1943.25,0.0,0.0
+Block 2 April 2 to July 2 2024.xls,RoomSales,792,2024-04-02,2024-07-02,60,2024-06-01,***,,0.0|1.7976931348623157e+308,2,792|793,0,0,0,0,0,0,0,0.0,0.0,0.0,-636.75,0.0,0.0
+Block 3  July 3 to October 2 2024.xls,RoomSales,168,2024-07-03,2024-10-02,60,2024-07-15,***,,0.0|1.7976931348623157e+308,2,168|169,0,0,0,0,0,0,0,0.0,0.0,0.0,-1407.75,0.0,0.0
+Block 4  October 3 to December 31 2024.xls,RoomSales,298,2024-10-03,2024-12-31,60,2024-10-25,***,,0.0|1.7976931348623157e+308,2,298|299,0,0,0,0,0,0,0,1635.0,0.0,0.0,1635.0,0.0,0.0
+Block 1 January 1 to April 2 2025.xls,RoomSales,688,2025-01-01,2025-04-02,60,2025-02-22,***,,0.0|1.7976931348623157e+308,2,688|689,0,0,0,0,0,0,0,0.0,0.0,0.0,-427.55,0.0,0.0
+Block 1 January 1 to April 2 2025.xls,RoomSales,742,2025-01-01,2025-04-02,60,2025-02-26,***,,0.0|1.7976931348623157e+308,2,742|743,0,0,0,0,0,0,0,0.0,0.0,0.0,-160.65,0.0,0.0
+Block 2  April 3 to July 3 2025.xls,RoomSales,571,2025-04-03,2025-07-03,60,2025-05-16,***,,0.0|1.7976931348623157e+308,2,571|572,0,0,0,0,0,0,0,0.0,0.0,0.0,-181.9,0.0,0.0
+Block 2  April 3 to July 3 2025.xls,RoomSales,612,2025-04-03,2025-07-03,60,2025-05-19,***,,0.0|1.7976931348623157e+308,2,612|613,0,0,0,0,0,0,0,1199.0,0.0,0.0,1199.0,0.0,0.0

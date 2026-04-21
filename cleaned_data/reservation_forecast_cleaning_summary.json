@@ -1,0 +1,70 @@
+{
+  "dataset_family": "reservation_forecast",
+  "raw_files_used": [
+    "ReservationForecast 2024.xls",
+    "ReservationForecast2023.xls"
+  ],
+  "cleaned_files_created": [
+    "reservation_forecast_daily_cleaned.csv",
+    "reservation_forecast_duplicates_removed.csv",
+    "reservation_forecast_cleaning_summary.json"
+  ],
+  "report_layout": {
+    "sheet_name": "ReservationForecast",
+    "header_rows_before_daily_data": 9,
+    "daily_data_row_rule": "Rows beginning at row 10 where column A is a valid Excel date were treated as daily observations.",
+    "trailing_totals_rule": "Rows where column A equals Totals were excluded from the cleaned daily table."
+  },
+  "date_coverage": {
+    "start": "2023-01-01",
+    "end": "2024-12-31",
+    "daily_rows_cleaned": 731,
+    "missing_business_dates_after_cleaning": [],
+    "per_file": [
+      {
+        "source_file": "ReservationForecast 2024.xls",
+        "source_sheet": "ReservationForecast",
+        "report_period_start": "2024-01-01",
+        "report_period_end": "2024-12-31",
+        "used_rows": 376,
+        "used_columns": 26
+      },
+      {
+        "source_file": "ReservationForecast2023.xls",
+        "source_sheet": "ReservationForecast",
+        "report_period_start": "2023-01-01",
+        "report_period_end": "2023-12-31",
+        "used_rows": 375,
+        "used_columns": 26
+      }
+    ]
+  },
+  "transformations": [
+    "Converted the report row date in column A from Excel date serial / datetime storage to ISO YYYY-MM-DD business_date.",
+    "Dropped the two unnamed blank spacer columns and kept only named metric columns plus source audit columns.",
+    "Normalized percent-like fields (Projected Cxl/No-Shows and Occ%) to decimal rates rounded to 4 decimals.",
+    "Normalized monetary totals to numeric values rounded to 2 decimals and ADR / RevPAR style metrics to numeric values rounded to 4 decimals.",
+    "Converted count fields to nullable integers.",
+    "Removed the trailing Totals row from each workbook before deduplication."
+  ],
+  "deduplication": {
+    "logical_key": [
+      "business_date"
+    ],
+    "duplicate_rows_removed": 0,
+    "note": "No duplicate business_date rows were present across the 2023 and 2024 ReservationForecast files after cleaning."
+  },
+  "rows_removed_or_excluded": {
+    "totals_rows_removed": 2,
+    "duplicate_rows_removed": 0
+  },
+  "data_quality_notes": [
+    "Projected Walk-Ins and Projected Cxl/No-Shows are present as columns but every observed daily value in the 2023 and 2024 files is zero.",
+    "ReservationForecast ADR and RevPAR are not explicitly labeled Gross or Net in the workbook; the cleaned file preserves the report labels as adr_reported and revpar_reported."
+  ],
+  "new_data_capabilities_from_this_family": [
+    "Daily arrivals, departures, and stayovers for 2023-2024.",
+    "Daily rooms sold, out-of-order rooms, transient rooms, group pickup counts, room revenue, ADR, and RevPAR for 2023-2024.",
+    "Daily group-specific revenue and arrival fields not present in the guest-list files."
+  ]
+}
