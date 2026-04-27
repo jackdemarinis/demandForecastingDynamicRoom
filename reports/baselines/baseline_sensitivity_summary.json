@@ -1,0 +1,173 @@
+{
+  "input_file": "processed_data/modeling_daily.csv",
+  "flags_file": "reports/audit/data_quality_flags.csv",
+  "metrics_file": "reports/baselines/baseline_sensitivity_metrics.csv",
+  "predictions_file": "reports/baselines/baseline_sensitivity_predictions.csv",
+  "figure_file": "reports/figures/baseline_sensitivity_test_mae.png",
+  "target": "target_rooms_sold",
+  "feature_count": 87,
+  "scenarios": [
+    {
+      "scenario": "full_data_reference",
+      "excluded_dates": [],
+      "excluded_row_count": 0,
+      "rows_after_exclusion": 1096,
+      "splits": {
+        "train": {
+          "rows": 547,
+          "start": "2023-01-01",
+          "end": "2024-06-30"
+        },
+        "validation": {
+          "rows": 184,
+          "start": "2024-07-01",
+          "end": "2024-12-31"
+        },
+        "test": {
+          "rows": 365,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        }
+      },
+      "best_test_model_by_mae": {
+        "scenario": "full_data_reference",
+        "model": "xgboost",
+        "split": "test",
+        "row_count": 365,
+        "mae": 8.038751805971746,
+        "rmse": 11.210156742707436,
+        "mape": 0.45421510557199646,
+        "r2": 0.5394006989330469
+      },
+      "best_test_learned_model_by_mae": {
+        "scenario": "full_data_reference",
+        "model": "xgboost",
+        "split": "test",
+        "row_count": 365,
+        "mae": 8.038751805971746,
+        "rmse": 11.210156742707436,
+        "mape": 0.45421510557199646,
+        "r2": 0.5394006989330469
+      }
+    },
+    {
+      "scenario": "exclude_over_capacity_only",
+      "excluded_dates": [
+        "2023-01-20",
+        "2024-08-31"
+      ],
+      "excluded_row_count": 2,
+      "rows_after_exclusion": 1094,
+      "splits": {
+        "train": {
+          "rows": 546,
+          "start": "2023-01-01",
+          "end": "2024-06-30"
+        },
+        "validation": {
+          "rows": 183,
+          "start": "2024-07-01",
+          "end": "2024-12-31"
+        },
+        "test": {
+          "rows": 365,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        }
+      },
+      "best_test_model_by_mae": {
+        "scenario": "exclude_over_capacity_only",
+        "model": "random_forest",
+        "split": "test",
+        "row_count": 365,
+        "mae": 8.01882146846705,
+        "rmse": 10.756858198832727,
+        "mape": 0.41608522293910993,
+        "r2": 0.5758975398005368
+      },
+      "best_test_learned_model_by_mae": {
+        "scenario": "exclude_over_capacity_only",
+        "model": "random_forest",
+        "split": "test",
+        "row_count": 365,
+        "mae": 8.01882146846705,
+        "rmse": 10.756858198832727,
+        "mape": 0.41608522293910993,
+        "r2": 0.5758975398005368
+      }
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "excluded_dates": [
+        "2023-01-20",
+        "2023-08-26",
+        "2024-08-31",
+        "2025-01-05",
+        "2025-01-06",
+        "2025-01-07",
+        "2025-01-08",
+        "2025-01-09",
+        "2025-01-10",
+        "2025-01-11",
+        "2025-01-12",
+        "2025-01-13",
+        "2025-01-14",
+        "2025-01-15"
+      ],
+      "excluded_row_count": 14,
+      "rows_after_exclusion": 1082,
+      "splits": {
+        "train": {
+          "rows": 545,
+          "start": "2023-01-01",
+          "end": "2024-06-30"
+        },
+        "validation": {
+          "rows": 183,
+          "start": "2024-07-01",
+          "end": "2024-12-31"
+        },
+        "test": {
+          "rows": 354,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        }
+      },
+      "best_test_model_by_mae": {
+        "scenario": "exclude_all_flagged",
+        "model": "xgboost",
+        "split": "test",
+        "row_count": 354,
+        "mae": 7.4433541917531505,
+        "rmse": 9.926893444041577,
+        "mape": 0.4561948917309624,
+        "r2": 0.5848942854894719
+      },
+      "best_test_learned_model_by_mae": {
+        "scenario": "exclude_all_flagged",
+        "model": "xgboost",
+        "split": "test",
+        "row_count": 354,
+        "mae": 7.4433541917531505,
+        "rmse": 9.926893444041577,
+        "mape": 0.4561948917309624,
+        "r2": 0.5848942854894719
+      }
+    }
+  ],
+  "preferred_pricing_model_source": {
+    "scenario": "exclude_all_flagged",
+    "model": "xgboost",
+    "reason": "Best learned model by test MAE after excluding all currently flagged operational rows.",
+    "metrics": {
+      "scenario": "exclude_all_flagged",
+      "model": "xgboost",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.4433541917531505,
+      "rmse": 9.926893444041577,
+      "mape": 0.4561948917309624,
+      "r2": 0.5848942854894719
+    }
+  }
+}

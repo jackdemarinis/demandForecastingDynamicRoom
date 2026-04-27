@@ -1,0 +1,158 @@
+{
+  "output_file": "processed_data/modeling_daily.csv",
+  "source_files": [
+    "cleaned_data/block_roomsales_daily_totals_cleaned.csv",
+    "cleaned_data/reservation_forecast_daily_cleaned.csv",
+    "processed_data/guest_daily_enrichment.csv"
+  ],
+  "row_count": 1096,
+  "column_count": 209,
+  "date_coverage": {
+    "start": "2023-01-01",
+    "end": "2025-12-31",
+    "missing_business_dates": [],
+    "duplicate_business_dates": 0
+  },
+  "target": "target_rooms_sold",
+  "reservation_forecast_join": {
+    "rows_with_reservation_forecast": 731,
+    "rows_without_reservation_forecast": 365,
+    "reservation_forecast_date_range": {
+      "start": "2023-01-01",
+      "end": "2024-12-31"
+    },
+    "rooms_sold_match_count": 731,
+    "revenue_match_count": 731
+  },
+  "guest_daily_join": {
+    "guest_daily_file_present": true,
+    "rows_with_guest_source_available": 370,
+    "guest_daily_date_range": {
+      "start": "2024-12-27",
+      "end": "2025-12-31"
+    },
+    "guest_columns_joined": [
+      "guest_source_available",
+      "guest_arrivals_total",
+      "guest_arrival_checked_out",
+      "guest_arrival_cancelled",
+      "guest_arrival_no_show",
+      "guest_arrival_wait_list",
+      "guest_arrival_avg_rate",
+      "guest_arrival_median_rate",
+      "guest_arrival_avg_nights",
+      "guest_arrival_median_nights",
+      "guest_arrival_total_booked_room_nights",
+      "guest_arrival_avg_adults",
+      "guest_arrival_duplicate_source_occurrences",
+      "guest_arrival_checked_out_share",
+      "guest_arrival_cancelled_share",
+      "guest_arrival_no_show_share",
+      "guest_arrival_wait_list_share",
+      "guest_market_segment_bar_arrivals",
+      "guest_market_segment_corp_group_arrivals",
+      "guest_market_segment_corporate_arrivals",
+      "guest_market_segment_discount_arrivals",
+      "guest_market_segment_leisure_arrivals",
+      "guest_market_segment_local_corp_arrivals",
+      "guest_market_segment_missing_arrivals",
+      "guest_market_segment_negotiated_arrivals",
+      "guest_market_segment_package_arrivals",
+      "guest_market_segment_social_grp_arrivals",
+      "guest_market_segment_weddings_arrivals",
+      "guest_market_segment_wholesale_arrivals",
+      "guest_market_segment_wholesale_arrival_share",
+      "guest_market_segment_discount_arrival_share",
+      "guest_market_segment_weddings_arrival_share",
+      "guest_market_segment_bar_arrival_share",
+      "guest_market_segment_social_grp_arrival_share",
+      "guest_market_segment_corp_group_arrival_share",
+      "guest_market_segment_corporate_arrival_share",
+      "guest_market_segment_local_corp_arrival_share",
+      "guest_market_segment_negotiated_arrival_share",
+      "guest_market_segment_package_arrival_share",
+      "guest_market_segment_leisure_arrival_share",
+      "guest_market_segment_missing_arrival_share",
+      "guest_room_type_dksns_arrivals",
+      "guest_room_type_hkns_arrivals",
+      "guest_room_type_hkobns_arrivals",
+      "guest_room_type_kesns_arrivals",
+      "guest_room_type_kfns_arrivals",
+      "guest_room_type_kns_arrivals",
+      "guest_room_type_kobns_arrivals",
+      "guest_room_type_kssns_arrivals",
+      "guest_room_type_qqns_arrivals",
+      "guest_room_type_qqobns_arrivals",
+      "guest_room_type_kns_arrival_share",
+      "guest_room_type_qqns_arrival_share",
+      "guest_room_type_qqobns_arrival_share",
+      "guest_room_type_kfns_arrival_share",
+      "guest_room_type_kssns_arrival_share",
+      "guest_room_type_kobns_arrival_share",
+      "guest_room_type_kesns_arrival_share",
+      "guest_room_type_dksns_arrival_share",
+      "guest_room_type_hkns_arrival_share",
+      "guest_room_type_hkobns_arrival_share",
+      "guest_stay_room_nights_proxy",
+      "guest_stay_avg_rate",
+      "guest_stay_revenue_proxy",
+      "guest_stay_avg_adults"
+    ]
+  },
+  "feature_groups": {
+    "date_features": [
+      "date_year",
+      "date_quarter",
+      "date_month",
+      "date_day",
+      "date_day_of_week",
+      "date_day_of_year",
+      "date_iso_week",
+      "date_is_weekend",
+      "date_is_month_start",
+      "date_is_month_end",
+      "date_is_quarter_start",
+      "date_is_quarter_end",
+      "date_day_of_week_sin",
+      "date_day_of_week_cos",
+      "date_month_sin",
+      "date_month_cos",
+      "date_day_of_year_sin",
+      "date_day_of_year_cos"
+    ],
+    "lag_days": [
+      1,
+      7,
+      14,
+      28,
+      365
+    ],
+    "rolling_windows_days": [
+      7,
+      14,
+      28,
+      56
+    ],
+    "history_base_columns": [
+      "target_rooms_sold",
+      "block_adr_net",
+      "block_room_revenue_net",
+      "block_occupancy_rate_reported"
+    ],
+    "occupancy_definition_columns": [
+      "block_occupancy_rate_reported",
+      "rf_occupancy_rate_reported",
+      "block_occupancy_calc_on_total_rooms",
+      "block_occupancy_calc_on_market_rooms",
+      "block_reported_occ_minus_total_room_calc",
+      "block_reported_occ_minus_on_market_calc",
+      "rf_reported_occ_minus_block_reported_occ"
+    ]
+  },
+  "data_quality_flags": {
+    "block_rows_sold_gt_total_rooms": 2,
+    "block_reported_occupancy_gt_1": 0,
+    "block_negative_net_revenue_rows": 0,
+    "block_zero_rooms_sold_rows": 12
+  }
+}

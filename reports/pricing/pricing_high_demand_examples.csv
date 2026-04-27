@@ -1,0 +1,13 @@
+business_date,day_of_week,demand_band,target_rooms_sold,forecast_rooms_sold_rounded,actual_occupancy_pct,forecast_occupancy_pct,historical_adr_net,recommended_adr,conservative_recommended_adr,historical_room_revenue_net,simulated_revenue_delta_at_actual_rooms,conservative_simulated_revenue_delta_at_actual_rooms
+2025-10-25,Saturday,very_high,59,60.0,98.3,100.0,218.3632,244.56,231.46,12883.43,1545.61,772.71
+2025-08-09,Saturday,very_high,57,60.0,95.0,100.0,173.9437,194.81,184.38,9914.79,1189.38,594.87
+2025-11-15,Saturday,very_high,59,60.0,98.3,100.0,166.0453,185.98,176.01,9796.67,1176.15,587.92
+2025-12-06,Saturday,very_high,60,60.0,100.0,100.0,160.6328,179.91,170.27,9637.97,1156.63,578.23
+2025-11-22,Saturday,very_high,58,60.0,96.7,100.0,161.2433,180.59,170.91,9352.11,1122.11,560.67
+2025-05-24,Saturday,very_high,57,59.9,95.0,99.9,237.016,265.46,251.24,13509.91,1621.31,810.77
+2025-10-04,Saturday,very_high,59,59.5,98.3,99.2,204.8171,229.4,217.11,12084.21,1450.39,725.28
+2025-11-08,Saturday,very_high,60,59.5,100.0,99.2,197.4707,221.17,209.32,11848.24,1421.96,710.96
+2025-10-11,Saturday,very_high,60,59.4,100.0,99.0,203.7838,228.23,216.01,12227.03,1466.77,733.57
+2025-08-30,Saturday,very_high,59,59.3,98.3,98.9,224.1717,251.07,237.62,13226.13,1587.0,793.45
+2025-08-16,Saturday,very_high,59,59.2,98.3,98.7,192.6195,215.73,204.18,11364.55,1363.52,682.07
+2025-08-02,Saturday,very_high,59,59.1,98.3,98.6,182.1429,204.0,193.07,10746.43,1289.57,644.7

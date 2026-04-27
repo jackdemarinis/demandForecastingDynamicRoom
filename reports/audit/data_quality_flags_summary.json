@@ -1,0 +1,14 @@
+{
+  "input_file": "processed_data/modeling_daily.csv",
+  "output_file": "reports/audit/data_quality_flags.csv",
+  "flagged_rows": 14,
+  "flag_counts": {
+    "zero_rooms_sold": 12,
+    "rooms_sold_gt_property_total": 2
+  },
+  "notes": [
+    "Flags are review records, not automatic corrections.",
+    "No modeling table values are changed by this audit.",
+    "The flagged rows should be resolved or documented before final report metrics are treated as final."
+  ]
+}

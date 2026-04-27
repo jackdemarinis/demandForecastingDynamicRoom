@@ -1,0 +1,678 @@
+{
+  "scenario": "exclude_all_flagged",
+  "input_file": "processed_data/modeling_daily.csv",
+  "flags_file": "reports/audit/data_quality_flags.csv",
+  "excluded_dates": [
+    "2023-01-20",
+    "2023-08-26",
+    "2024-08-31",
+    "2025-01-05",
+    "2025-01-06",
+    "2025-01-07",
+    "2025-01-08",
+    "2025-01-09",
+    "2025-01-10",
+    "2025-01-11",
+    "2025-01-12",
+    "2025-01-13",
+    "2025-01-14",
+    "2025-01-15"
+  ],
+  "rows_after_exclusion": 1082,
+  "target": "target_rooms_sold",
+  "feature_count": 87,
+  "splits": {
+    "train": {
+      "rows": 545,
+      "start": "2023-01-01",
+      "end": "2024-06-30"
+    },
+    "validation": {
+      "rows": 183,
+      "start": "2024-07-01",
+      "end": "2024-12-31"
+    },
+    "test": {
+      "rows": 354,
+      "start": "2025-01-01",
+      "end": "2025-12-31"
+    }
+  },
+  "modeling_note": "The MLP uses the same tabular lag, rolling, and calendar features as the tree baselines. LSTM and GRU models use sequences of those same leakage-safe feature rows ending on each prediction date. The best neural configurations are selected by validation MAE, then reported on the held-out 2025 test set.",
+  "framework_note": "PyTorch is used for LSTM/GRU sequence models. Training device: mps.",
+  "outputs": {
+    "predictions": "reports/deep_learning/deep_learning_predictions.csv",
+    "metrics": "reports/deep_learning/deep_learning_metrics.csv",
+    "comparison": "reports/deep_learning/deep_learning_model_comparison.csv",
+    "summary": "reports/deep_learning/deep_learning_summary.json",
+    "figure": "reports/figures/deep_learning_model_comparison.png"
+  },
+  "best_mlp_model_by_validation_mae": "mlp_regularized",
+  "best_sequence_model_by_validation_mae": "transformer_28d_small",
+  "best_mlp_test_metrics": {
+    "model": "mlp_regularized",
+    "split": "test",
+    "row_count": 354,
+    "mae": 13.878200255077582,
+    "rmse": 17.481739746120514,
+    "mape": 0.679052014932274,
+    "r2": -0.2873637999933434
+  },
+  "best_sequence_test_metrics_for_validation_selected_model": {
+    "model": "transformer_28d_small",
+    "split": "test",
+    "row_count": 354,
+    "mae": 7.834981966826875,
+    "rmse": 10.305357831724006,
+    "mape": 0.4323266610122124,
+    "r2": 0.5526389753616805
+  },
+  "best_sequence_test_metrics_by_mae": {
+    "model": "gru_56d_wide",
+    "split": "test",
+    "row_count": 354,
+    "mae": 7.8127796367063365,
+    "rmse": 10.587737433935589,
+    "mape": 0.4881741941834785,
+    "r2": 0.5277865889006426
+  },
+  "best_overall_test_model_in_comparison": {
+    "scenario": "exclude_all_flagged",
+    "model": "xgboost",
+    "split": "test",
+    "row_count": 354,
+    "mae": 7.4433541917531505,
+    "rmse": 9.926893444041577,
+    "mape": 0.4561948917309624,
+    "r2": 0.5848942854894719,
+    "model_family": "tree_baseline"
+  },
+  "sequence_model_metadata": [
+    {
+      "model": "lstm_14d_small",
+      "kind": "lstm",
+      "lookback": 14,
+      "hidden_size": 32,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.001,
+      "weight_decay": 0.01,
+      "num_heads": null,
+      "best_epoch": 12,
+      "best_validation_loss_scaled": 0.16376730799674988,
+      "train_sequence_rows": 532
+    },
+    {
+      "model": "lstm_28d_regularized",
+      "kind": "lstm",
+      "lookback": 28,
+      "hidden_size": 48,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.0008,
+      "weight_decay": 0.03,
+      "num_heads": null,
+      "best_epoch": 17,
+      "best_validation_loss_scaled": 0.16036830842494965,
+      "train_sequence_rows": 518
+    },
+    {
+      "model": "gru_14d_small",
+      "kind": "gru",
+      "lookback": 14,
+      "hidden_size": 32,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.001,
+      "weight_decay": 0.01,
+      "num_heads": null,
+      "best_epoch": 13,
+      "best_validation_loss_scaled": 0.16136255860328674,
+      "train_sequence_rows": 532
+    },
+    {
+      "model": "gru_28d_regularized",
+      "kind": "gru",
+      "lookback": 28,
+      "hidden_size": 48,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.0008,
+      "weight_decay": 0.03,
+      "num_heads": null,
+      "best_epoch": 23,
+      "best_validation_loss_scaled": 0.14871418476104736,
+      "train_sequence_rows": 518
+    },
+    {
+      "model": "gru_56d_wide",
+      "kind": "gru",
+      "lookback": 56,
+      "hidden_size": 64,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.0006,
+      "weight_decay": 0.05,
+      "num_heads": null,
+      "best_epoch": 14,
+      "best_validation_loss_scaled": 0.16603955626487732,
+      "train_sequence_rows": 490
+    },
+    {
+      "model": "gru_42d_balanced",
+      "kind": "gru",
+      "lookback": 42,
+      "hidden_size": 64,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.0007,
+      "weight_decay": 0.04,
+      "num_heads": null,
+      "best_epoch": 10,
+      "best_validation_loss_scaled": 0.1655907928943634,
+      "train_sequence_rows": 504
+    },
+    {
+      "model": "gru_56d_more_regularized",
+      "kind": "gru",
+      "lookback": 56,
+      "hidden_size": 64,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.0005,
+      "weight_decay": 0.1,
+      "num_heads": null,
+      "best_epoch": 14,
+      "best_validation_loss_scaled": 0.16682764887809753,
+      "train_sequence_rows": 490
+    },
+    {
+      "model": "gru_84d_compact",
+      "kind": "gru",
+      "lookback": 84,
+      "hidden_size": 48,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.0005,
+      "weight_decay": 0.08,
+      "num_heads": null,
+      "best_epoch": 23,
+      "best_validation_loss_scaled": 0.1516115665435791,
+      "train_sequence_rows": 462
+    },
+    {
+      "model": "lstm_56d_regularized",
+      "kind": "lstm",
+      "lookback": 56,
+      "hidden_size": 64,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "learning_rate": 0.0005,
+      "weight_decay": 0.08,
+      "num_heads": null,
+      "best_epoch": 14,
+      "best_validation_loss_scaled": 0.19840392470359802,
+      "train_sequence_rows": 490
+    },
+    {
+      "model": "transformer_28d_small",
+      "kind": "transformer",
+      "lookback": 28,
+      "hidden_size": 48,
+      "num_layers": 1,
+      "dropout": 0.1,
+      "learning_rate": 0.0005,
+      "weight_decay": 0.05,
+      "num_heads": 4,
+      "best_epoch": 49,
+      "best_validation_loss_scaled": 0.137177512049675,
+      "train_sequence_rows": 518
+    },
+    {
+      "model": "transformer_56d_regularized",
+      "kind": "transformer",
+      "lookback": 56,
+      "hidden_size": 64,
+      "num_layers": 1,
+      "dropout": 0.15,
+      "learning_rate": 0.0004,
+      "weight_decay": 0.08,
+      "num_heads": 4,
+      "best_epoch": 22,
+      "best_validation_loss_scaled": 0.1493796408176422,
+      "train_sequence_rows": 490
+    }
+  ],
+  "all_deep_learning_metrics": [
+    {
+      "model": "gru_56d_wide",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.8127796367063365,
+      "rmse": 10.587737433935589,
+      "mape": 0.4881741941834785,
+      "r2": 0.5277865889006426
+    },
+    {
+      "model": "gru_56d_more_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.821516187851039,
+      "rmse": 10.61604689235186,
+      "mape": 0.49397799121652175,
+      "r2": 0.5252580075473485
+    },
+    {
+      "model": "transformer_28d_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.834981966826875,
+      "rmse": 10.305357831724006,
+      "mape": 0.4323266610122124,
+      "r2": 0.5526389753616805
+    },
+    {
+      "model": "gru_42d_balanced",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.937085803619213,
+      "rmse": 10.586794778123748,
+      "mape": 0.484533489872273,
+      "r2": 0.5278706701131558
+    },
+    {
+      "model": "transformer_56d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.944733894477456,
+      "rmse": 10.560648697447846,
+      "mape": 0.41758977642236833,
+      "r2": 0.5301998147660831
+    },
+    {
+      "model": "gru_84d_compact",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.379818873216877,
+      "rmse": 10.78417078115136,
+      "mape": 0.5012757895556442,
+      "r2": 0.5101021815854375
+    },
+    {
+      "model": "gru_28d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.43656085709394,
+      "rmse": 10.791055108812206,
+      "mape": 0.4883040145437686,
+      "r2": 0.5094765064797164
+    },
+    {
+      "model": "lstm_56d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.66199106550486,
+      "rmse": 11.209554701692271,
+      "mape": 0.5168007657705685,
+      "r2": 0.47069168914929116
+    },
+    {
+      "model": "lstm_28d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.73520763849808,
+      "rmse": 11.036049896211685,
+      "mape": 0.4743614427529965,
+      "r2": 0.48695046011032883
+    },
+    {
+      "model": "gru_14d_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.9505660547375,
+      "rmse": 10.990474225064588,
+      "mape": 0.45340931132057377,
+      "r2": 0.49117920059550135
+    },
+    {
+      "model": "lstm_14d_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 9.064860220009324,
+      "rmse": 11.647323291503978,
+      "mape": 0.5115934922280639,
+      "r2": 0.428542085094466
+    },
+    {
+      "model": "mlp_medium",
+      "split": "test",
+      "row_count": 354,
+      "mae": 12.663189704361582,
+      "rmse": 16.63083977382283,
+      "mape": 0.6436159307133555,
+      "r2": -0.16509235002632772
+    },
+    {
+      "model": "mlp_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 13.878200255077582,
+      "rmse": 17.481739746120514,
+      "mape": 0.679052014932274,
+      "r2": -0.2873637999933434
+    },
+    {
+      "model": "mlp_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 15.851679559478615,
+      "rmse": 20.747366741032714,
+      "mape": 0.6585887837805794,
+      "r2": -0.8132511410241687
+    },
+    {
+      "model": "transformer_28d_small",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 6.272710550026815,
+      "rmse": 8.93599046486249,
+      "mape": 0.21031568612633908,
+      "r2": 0.638632342859091
+    },
+    {
+      "model": "gru_28d_regularized",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 6.766754483916069,
+      "rmse": 9.277694455612698,
+      "mape": 0.2236420540503449,
+      "r2": 0.6104672130592561
+    },
+    {
+      "model": "transformer_56d_regularized",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 6.782489432663214,
+      "rmse": 9.27250354473364,
+      "mape": 0.22045953813221789,
+      "r2": 0.6109029817351519
+    },
+    {
+      "model": "gru_84d_compact",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 6.921574983440462,
+      "rmse": 9.369437192632164,
+      "mape": 0.23502742807674726,
+      "r2": 0.6027253120104981
+    },
+    {
+      "model": "lstm_14d_small",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 6.946460202743447,
+      "rmse": 9.86697347007682,
+      "mape": 0.23494110453411154,
+      "r2": 0.5594128691480424
+    },
+    {
+      "model": "gru_56d_wide",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 7.215009866516446,
+      "rmse": 9.828450524874743,
+      "mape": 0.23557374620180324,
+      "r2": 0.5628464612724664
+    },
+    {
+      "model": "lstm_28d_regularized",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 7.233234655661661,
+      "rmse": 9.739366996007204,
+      "mape": 0.24027647763732082,
+      "r2": 0.5707351294529974
+    },
+    {
+      "model": "gru_42d_balanced",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 7.249192107570627,
+      "rmse": 9.795789535974041,
+      "mape": 0.23632650949757192,
+      "r2": 0.5657470493973826
+    },
+    {
+      "model": "gru_56d_more_regularized",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 7.265573710040316,
+      "rmse": 9.85811959577885,
+      "mape": 0.23788546782230863,
+      "r2": 0.5602032134006711
+    },
+    {
+      "model": "gru_14d_small",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 7.494070355358019,
+      "rmse": 9.599616030175044,
+      "mape": 0.22722713336016354,
+      "r2": 0.5829658582680382
+    },
+    {
+      "model": "lstm_56d_regularized",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 8.344255186820941,
+      "rmse": 10.604992592534554,
+      "mape": 0.28684633296480744,
+      "r2": 0.49103885864273233
+    },
+    {
+      "model": "mlp_regularized",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 10.497767559766638,
+      "rmse": 14.089176952499704,
+      "mape": 0.3068779156790437,
+      "r2": 0.10167159129723335
+    },
+    {
+      "model": "mlp_small",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 10.817008129734933,
+      "rmse": 15.400444688350607,
+      "mape": 0.3622466564163768,
+      "r2": -0.07332293422074088
+    },
+    {
+      "model": "mlp_medium",
+      "split": "validation",
+      "row_count": 183,
+      "mae": 10.929665290139152,
+      "rmse": 14.12668181341672,
+      "mape": 0.30953702634508046,
+      "r2": 0.09688259260167376
+    }
+  ],
+  "comparison": [
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "xgboost",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.4433541917531505,
+      "rmse": 9.926893444041577,
+      "mape": 0.4561948917309624,
+      "r2": 0.5848942854894719,
+      "model_family": "tree_baseline"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "random_forest",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.465911268377081,
+      "rmse": 9.834086658145626,
+      "mape": 0.4267014410732346,
+      "r2": 0.5926196717877064,
+      "model_family": "tree_baseline"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "gru_56d_wide",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.8127796367063365,
+      "rmse": 10.587737433935589,
+      "mape": 0.4881741941834785,
+      "r2": 0.5277865889006426,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "gru_56d_more_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.821516187851039,
+      "rmse": 10.61604689235186,
+      "mape": 0.49397799121652175,
+      "r2": 0.5252580075473485,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "transformer_28d_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.834981966826875,
+      "rmse": 10.305357831724006,
+      "mape": 0.4323266610122124,
+      "r2": 0.5526389753616805,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "gru_42d_balanced",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.937085803619213,
+      "rmse": 10.586794778123748,
+      "mape": 0.484533489872273,
+      "r2": 0.5278706701131558,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "transformer_56d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.944733894477456,
+      "rmse": 10.560648697447846,
+      "mape": 0.41758977642236833,
+      "r2": 0.5301998147660831,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "gru_84d_compact",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.379818873216877,
+      "rmse": 10.78417078115136,
+      "mape": 0.5012757895556442,
+      "r2": 0.5101021815854375,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "gru_28d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.43656085709394,
+      "rmse": 10.791055108812206,
+      "mape": 0.4883040145437686,
+      "r2": 0.5094765064797164,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "lstm_56d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.66199106550486,
+      "rmse": 11.209554701692271,
+      "mape": 0.5168007657705685,
+      "r2": 0.47069168914929116,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "lstm_28d_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.73520763849808,
+      "rmse": 11.036049896211685,
+      "mape": 0.4743614427529965,
+      "r2": 0.48695046011032883,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "gru_14d_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 8.9505660547375,
+      "rmse": 10.990474225064588,
+      "mape": 0.45340931132057377,
+      "r2": 0.49117920059550135,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "lstm_14d_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 9.064860220009324,
+      "rmse": 11.647323291503978,
+      "mape": 0.5115934922280639,
+      "r2": 0.428542085094466,
+      "model_family": "sequence_neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "mlp_medium",
+      "split": "test",
+      "row_count": 354,
+      "mae": 12.663189704361582,
+      "rmse": 16.63083977382283,
+      "mape": 0.6436159307133555,
+      "r2": -0.16509235002632772,
+      "model_family": "neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "mlp_regularized",
+      "split": "test",
+      "row_count": 354,
+      "mae": 13.878200255077582,
+      "rmse": 17.481739746120514,
+      "mape": 0.679052014932274,
+      "r2": -0.2873637999933434,
+      "model_family": "neural_network"
+    },
+    {
+      "scenario": "exclude_all_flagged",
+      "model": "mlp_small",
+      "split": "test",
+      "row_count": 354,
+      "mae": 15.851679559478615,
+      "rmse": 20.747366741032714,
+      "mape": 0.6585887837805794,
+      "r2": -0.8132511410241687,
+      "model_family": "neural_network"
+    }
+  ]
+}

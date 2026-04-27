@@ -1,0 +1,5 @@
+scenario,row_scope,rows,available_room_nights,actual_rooms_sold,forecast_rooms_sold,actual_occupancy_rate,forecast_occupancy_rate,static_simulated_occupancy_delta,historical_revenue_net,simulated_revenue_at_actual_rooms,simulated_revenue_delta,historical_revpar_net,simulated_revpar_at_actual_rooms,simulated_revpar_delta,historical_adr_net_total,simulated_adr_at_actual_rooms
+aggressive,all_test_days,365,21900.0,13514.0,14382.89,0.617078,0.656753,0.0,2018342.79,2106125.49,87782.7,92.1618,96.1701,4.0083,149.352,155.8477
+aggressive,unflagged_test_days,354,21240.0,13514.0,14046.9,0.636252,0.661342,0.0,2018024.11,2106125.49,88101.38,95.0106,99.1585,4.1479,149.3284,155.8477
+conservative,all_test_days,365,21900.0,13514.0,14382.89,0.617078,0.656753,0.0,2018342.79,2062116.46,43773.67,92.1618,94.1606,1.9988,149.352,152.5911
+conservative,unflagged_test_days,354,21240.0,13514.0,14046.9,0.636252,0.661342,0.0,2018024.11,2062116.46,44092.35,95.0106,97.0865,2.0759,149.3284,152.5911

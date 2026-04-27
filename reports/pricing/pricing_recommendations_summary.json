@@ -1,0 +1,119 @@
+{
+  "output_file": "reports/pricing/pricing_recommendations.csv",
+  "scenario": "aggressive",
+  "pricing_model_source": {
+    "scenario": "exclude_all_flagged",
+    "model": "xgboost",
+    "reason": "Best learned model by test MAE after excluding all currently flagged operational rows.",
+    "metrics": {
+      "scenario": "exclude_all_flagged",
+      "model": "xgboost",
+      "split": "test",
+      "row_count": 354,
+      "mae": 7.4433541917531505,
+      "rmse": 9.926893444041577,
+      "mape": 0.4561948917309624,
+      "r2": 0.5848942854894719
+    }
+  },
+  "rule": {
+    "reference_adr": "Historical same-day net ADR, then 28-day rolling net ADR, 14-day rolling net ADR, 7-day lag, 1-day lag, then median nonzero ADR fallback.",
+    "forecast_signal": "forecast_rooms_sold / property_total_rooms",
+    "adjustments": {
+      "very_high_occupancy_gte_0.90": 0.12,
+      "high_occupancy_gte_0.80": 0.08,
+      "moderately_high_occupancy_gte_0.70": 0.04,
+      "moderately_low_occupancy_lte_0.60": -0.04,
+      "low_occupancy_lte_0.50": -0.08,
+      "very_low_occupancy_lte_0.35": -0.12
+    },
+    "bounds": {
+      "min_adr": 75.0,
+      "max_adr": 350.0,
+      "max_daily_change_from_reference": 0.2
+    }
+  },
+  "simulation_caveat": "This is a static academic counterfactual. It starts from historical same-day ADR, applies bounded demand-based adjustments, then applies recommended ADR to actual realized rooms. It does not estimate demand response to price changes.",
+  "all_test_days": {
+    "rows": 365,
+    "historical_revenue_net": 2018342.79,
+    "simulated_revenue_at_actual_rooms": 2106125.49,
+    "simulated_revenue_delta": 87782.7,
+    "simulated_revenue_delta_pct": 0.043492,
+    "average_historical_adr_nonzero_actual": 140.0829,
+    "average_recommended_adr_nonzero_actual": 142.8279,
+    "average_absolute_adr_change_vs_reference": 9.3962
+  },
+  "unflagged_test_days": {
+    "rows": 354,
+    "historical_revenue_net": 2018024.11,
+    "simulated_revenue_at_actual_rooms": 2106125.49,
+    "simulated_revenue_delta": 88101.38,
+    "simulated_revenue_delta_pct": 0.043657,
+    "average_historical_adr_nonzero_actual": 140.0829,
+    "average_recommended_adr_nonzero_actual": 142.8279,
+    "average_absolute_adr_change_vs_reference": 9.5218
+  },
+  "flagged_rows_in_pricing_period": 11,
+  "demand_band_counts": {
+    "moderately_low": 85,
+    "very_high": 78,
+    "low": 72,
+    "neutral": 66,
+    "moderately_high": 28,
+    "high": 24,
+    "very_low": 12
+  },
+  "scenario_comparison_file": "reports/pricing/pricing_scenario_comparison.csv",
+  "scenario_comparison_figure": "reports/figures/pricing_scenario_comparison.png",
+  "scenario_comparison": [
+    {
+      "scenario": "aggressive",
+      "row_scope": "all_test_days",
+      "rows": 365,
+      "historical_revenue_net": 2018342.79,
+      "simulated_revenue_at_actual_rooms": 2106125.49,
+      "simulated_revenue_delta": 87782.7,
+      "simulated_revenue_delta_pct": 0.043492,
+      "average_historical_adr_nonzero_actual": 140.0829,
+      "average_recommended_adr_nonzero_actual": 142.8279,
+      "average_absolute_adr_change_vs_reference": 9.3962
+    },
+    {
+      "scenario": "aggressive",
+      "row_scope": "unflagged_test_days",
+      "rows": 354,
+      "historical_revenue_net": 2018024.11,
+      "simulated_revenue_at_actual_rooms": 2106125.49,
+      "simulated_revenue_delta": 88101.38,
+      "simulated_revenue_delta_pct": 0.043657,
+      "average_historical_adr_nonzero_actual": 140.0829,
+      "average_recommended_adr_nonzero_actual": 142.8279,
+      "average_absolute_adr_change_vs_reference": 9.5218
+    },
+    {
+      "scenario": "conservative",
+      "row_scope": "all_test_days",
+      "rows": 365,
+      "historical_revenue_net": 2018342.79,
+      "simulated_revenue_at_actual_rooms": 2062116.46,
+      "simulated_revenue_delta": 43773.67,
+      "simulated_revenue_delta_pct": 0.021688,
+      "average_historical_adr_nonzero_actual": 140.0829,
+      "average_recommended_adr_nonzero_actual": 141.4591,
+      "average_absolute_adr_change_vs_reference": 4.7024
+    },
+    {
+      "scenario": "conservative",
+      "row_scope": "unflagged_test_days",
+      "rows": 354,
+      "historical_revenue_net": 2018024.11,
+      "simulated_revenue_at_actual_rooms": 2062116.46,
+      "simulated_revenue_delta": 44092.35,
+      "simulated_revenue_delta_pct": 0.021849,
+      "average_historical_adr_nonzero_actual": 140.0829,
+      "average_recommended_adr_nonzero_actual": 141.4591,
+      "average_absolute_adr_change_vs_reference": 4.7654
+    }
+  ]
+}

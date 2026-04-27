@@ -1,1 +1,5 @@
 .claude/worktrees/dazzling-hodgkin-5ef276/
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store

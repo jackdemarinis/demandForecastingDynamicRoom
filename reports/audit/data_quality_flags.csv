@@ -1,0 +1,15 @@
+flag_type,business_date,property_total_rooms,target_rooms_sold,block_occupancy_rate_reported,block_on_market_rooms,block_out_of_order_rooms,block_room_revenue_net,block_adr_net,block_source_file,review_note
+rooms_sold_gt_property_total,2023-01-20,60,61,,60,0,6889.1,112.9361,Block12023roomtypes.xls,Rooms sold exceeds inferred 60-room property capacity. Treat as a raw report anomaly or over-capacity operational edge case until verified.
+zero_rooms_sold,2023-08-26,60,0,0.0,60,0,0.0,0.0,Block32023roomtypes.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+rooms_sold_gt_property_total,2024-08-31,60,66,,60,0,12725.44,192.8097,Block 3  July 3 to October 2 2024.xls,Rooms sold exceeds inferred 60-room property capacity. Treat as a raw report anomaly or over-capacity operational edge case until verified.
+zero_rooms_sold,2025-01-05,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-06,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-07,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-08,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-09,60,0,0.0,60,0,318.68,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold but nonzero net room revenue; likely revenue adjustment, late posting, or report anomaly."
+zero_rooms_sold,2025-01-10,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-11,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-12,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-13,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-14,60,0,0.0,60,0,0.0,0.0,Block 1 January 1 to April 2 2025.xls,"Zero rooms sold and zero revenue; possible closure, outage, or raw report anomaly."
+zero_rooms_sold,2025-01-15,60,0,0.0,48,12,0.0,0.0,Block 1 January 1 to April 2 2025.xls,Zero rooms sold with out-of-order rooms present; possible partial closure or outage period.

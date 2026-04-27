@@ -1,0 +1,37 @@
+{
+  "output_file": "processed_data/guest_daily_enrichment.csv",
+  "source_file": "cleaned_data/guest_stays_cleaned.csv",
+  "row_count": 370,
+  "column_count": 66,
+  "date_coverage": {
+    "start": "2024-12-27",
+    "end": "2025-12-31"
+  },
+  "raw_guest_records": 10579,
+  "pii_columns_excluded": [
+    "guest_name",
+    "email",
+    "comments",
+    "confirmation_number",
+    "folio_number",
+    "room_number"
+  ],
+  "status_counts": {
+    "Checked-Out": 8713,
+    "Cancelled": 1596,
+    "Wait List": 135,
+    "No-Show": 135
+  },
+  "data_quality_notes": {
+    "records_with_nonpositive_nights": 16,
+    "records_with_rate_over_1000": 1,
+    "records_with_missing_market_segment": 4,
+    "records_with_missing_room_type": 0
+  },
+  "feature_notes": [
+    "Arrival features are grouped by arrival_date.",
+    "Stay-date features use Checked-Out records with positive nights and expand each stay across arrival_date through departure_date minus one day.",
+    "PII fields are not written to the daily enrichment output.",
+    "The guest-list source mainly covers 2025, so these features are enrichment/context rather than fully trainable history for 2023-2024 baselines."
+  ]
+}

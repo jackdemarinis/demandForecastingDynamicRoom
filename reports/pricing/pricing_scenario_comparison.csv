@@ -1,0 +1,5 @@
+scenario,row_scope,rows,historical_revenue_net,simulated_revenue_at_actual_rooms,simulated_revenue_delta,simulated_revenue_delta_pct,average_historical_adr_nonzero_actual,average_recommended_adr_nonzero_actual,average_absolute_adr_change_vs_reference
+aggressive,all_test_days,365,2018342.79,2106125.49,87782.7,0.043492,140.0829,142.8279,9.3962
+aggressive,unflagged_test_days,354,2018024.11,2106125.49,88101.38,0.043657,140.0829,142.8279,9.5218
+conservative,all_test_days,365,2018342.79,2062116.46,43773.67,0.021688,140.0829,141.4591,4.7024
+conservative,unflagged_test_days,354,2018024.11,2062116.46,44092.35,0.021849,140.0829,141.4591,4.7654
