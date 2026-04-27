@@ -100,51 +100,181 @@ def build_feature_importance() -> pd.DataFrame:
 
 
 def draw_pipeline_architecture() -> None:
-    fig, axis = plt.subplots(figsize=(14, 7))
+    from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+
+    fig = plt.figure(figsize=(14, 9))
+    axis = fig.add_axes((0, 0, 1, 1))
+    axis.set_xlim(0, 1)
+    axis.set_ylim(0, 1)
     axis.axis("off")
 
-    boxes = [
-        ("Raw reports\nGuestNameList, Block RoomSales,\nReservationForecast", 0.04, 0.62, 0.18, 0.22),
-        ("Cleaning + dedupe\nstandardize dates, rates,\nstatus, source audits", 0.29, 0.62, 0.18, 0.22),
-        ("Daily modeling table\n1,096 dates, lag/rolling,\ncalendar + guest features", 0.54, 0.62, 0.18, 0.22),
-        ("Forecast models\nbaselines, XGBoost, RF,\nMLP, LSTM, GRU, Transformer", 0.79, 0.62, 0.18, 0.22),
-        ("Sensitivity + model choice\nexclude flagged anomalies,\nselect XGBoost by MAE", 0.29, 0.20, 0.18, 0.22),
-        ("Pricing layer\nforecast occupancy,\nbounded ADR rules", 0.54, 0.20, 0.18, 0.22),
-        ("Business outputs\nrevenue, ADR, RevPAR,\nscenario examples", 0.79, 0.20, 0.18, 0.22),
+    palette = {
+        "data":    {"band": "#eff6ff", "fill": "#dbeafe", "edge": "#1d4ed8", "label": "Data"},
+        "model":   {"band": "#f5f3ff", "fill": "#ede9fe", "edge": "#6d28d9", "label": "Modeling"},
+        "pricing": {"band": "#ecfdf5", "fill": "#d1fae5", "edge": "#047857", "label": "Pricing & Outputs"},
+    }
+    highlight = {"fill": "#fef3c7", "edge": "#b45309"}
+    text_dark = "#0f172a"
+    text_body = "#1f2937"
+    arrow_color = "#475569"
+
+    rows = {
+        "data":    {"y": 0.66, "h": 0.18, "band_y": 0.625, "band_h": 0.225},
+        "model":   {"y": 0.39, "h": 0.18, "band_y": 0.355, "band_h": 0.225},
+        "pricing": {"y": 0.12, "h": 0.18, "band_y": 0.085, "band_h": 0.225},
+    }
+
+    layers = [
+        (
+            "data",
+            [
+                ("Raw Reports",     "GuestNameList\nBlock RoomSales\nReservationForecast"),
+                ("Cleaning & Audit","Dedupe + standardize\ndates, rates, status\nflag 14 anomaly rows"),
+                ("Modeling Table",  "1,096 daily rows\n2023-01 → 2025-12\nlag · rolling · calendar"),
+            ],
+        ),
+        (
+            "model",
+            [
+                ("Forecast Model Sweep", "Baselines · Ridge\nRandom Forest · XGBoost\nMLP · LSTM · GRU · Transformer"),
+                ("Sensitivity & Selection", "3 data-quality conventions\nchronological val/test\n→ XGBoost (MAE 7.443)", True),
+            ],
+        ),
+        (
+            "pricing",
+            [
+                ("Pricing Layer", "Forecast → occupancy band\nreference ADR + bounds\naggressive · conservative"),
+                ("Business Outputs", "Revenue · ADR · RevPAR\nscenario comparison\nhigh-demand examples"),
+            ],
+        ),
     ]
 
-    for label, x, y, width, height in boxes:
-        axis.add_patch(
-            plt.Rectangle(
-                (x, y),
-                width,
-                height,
-                facecolor="#eff6ff",
-                edgecolor="#1f2937",
-                linewidth=1.4,
+    band_x = 0.10
+    band_w = 0.86
+    box_positions = {}
+
+    for stage_key, items in layers:
+        meta = rows[stage_key]
+        y, h = meta["y"], meta["h"]
+        band_y, band_h = meta["band_y"], meta["band_h"]
+        band_color = palette[stage_key]["band"]
+        edge_color = palette[stage_key]["edge"]
+
+        axis.add_patch(FancyBboxPatch(
+            (band_x, band_y), band_w, band_h,
+            boxstyle="round,pad=0.005,rounding_size=0.018",
+            facecolor=band_color, edgecolor=edge_color,
+            linewidth=1.0, alpha=0.95, zorder=0,
+        ))
+        axis.text(
+            band_x - 0.012, band_y + band_h / 2,
+            palette[stage_key]["label"].upper(),
+            ha="center", va="center",
+            fontsize=11, weight="bold", color=edge_color, rotation=90, zorder=1,
+        )
+
+        n = len(items)
+        usable_w = band_w - 0.04
+        gap = 0.04
+        box_w = (usable_w - (n - 1) * gap) / n
+        start_x = band_x + 0.02
+
+        for i, item in enumerate(items):
+            title = item[0]
+            body = item[1]
+            is_highlight = len(item) > 2 and item[2]
+
+            x = start_x + i * (box_w + gap)
+            fill = highlight["fill"] if is_highlight else palette[stage_key]["fill"]
+            box_edge = highlight["edge"] if is_highlight else palette[stage_key]["edge"]
+
+            axis.add_patch(FancyBboxPatch(
+                (x, y), box_w, h,
+                boxstyle="round,pad=0.004,rounding_size=0.014",
+                facecolor=fill, edgecolor=box_edge, linewidth=1.8, zorder=2,
+            ))
+            axis.text(
+                x + box_w / 2, y + h - 0.022, title,
+                ha="center", va="top",
+                fontsize=12, weight="bold", color=box_edge, zorder=3,
             )
-        )
-        axis.text(x + width / 2, y + height / 2, label, ha="center", va="center", fontsize=10)
+            axis.plot(
+                [x + 0.012, x + box_w - 0.012],
+                [y + h - 0.052, y + h - 0.052],
+                color=box_edge, linewidth=0.9, alpha=0.5, zorder=3,
+            )
+            axis.text(
+                x + box_w / 2, y + h - 0.062, body,
+                ha="center", va="top",
+                fontsize=10, color=text_body, zorder=3,
+            )
 
-    arrows = [
-        ((0.22, 0.73), (0.29, 0.73)),
-        ((0.47, 0.73), (0.54, 0.73)),
-        ((0.72, 0.73), (0.79, 0.73)),
-        ((0.88, 0.62), (0.43, 0.42)),
-        ((0.47, 0.31), (0.54, 0.31)),
-        ((0.72, 0.31), (0.79, 0.31)),
-    ]
-    for start, end in arrows:
-        axis.annotate(
-            "",
-            xy=end,
-            xytext=start,
-            arrowprops={"arrowstyle": "->", "linewidth": 1.6, "color": "#1f2937"},
-        )
+            box_positions[(stage_key, i)] = {
+                "x": x, "y": y, "w": box_w, "h": h,
+                "left":  (x, y + h / 2),
+                "right": (x + box_w, y + h / 2),
+                "top":   (x + box_w / 2, y + h),
+                "bottom":(x + box_w / 2, y),
+            }
 
-    axis.set_title("Hotel Demand Forecasting and Pricing MVP Pipeline", fontsize=16, weight="bold")
-    fig.tight_layout()
-    fig.savefig(PIPELINE_ARCHITECTURE_FIGURE, dpi=180)
+    def horizontal_arrow(start_box, end_box, color=arrow_color):
+        sx, sy = box_positions[start_box]["right"]
+        ex, ey = box_positions[end_box]["left"]
+        sx += 0.004
+        ex -= 0.004
+        axis.add_patch(FancyArrowPatch(
+            (sx, sy), (ex, ey),
+            arrowstyle="-|>", mutation_scale=18,
+            linewidth=1.8, color=color, zorder=4,
+        ))
+
+    def vertical_band_arrow(upper_band_bottom, lower_band_top, label=None, color=arrow_color):
+        sx = ex = 0.5
+        sy = upper_band_bottom - 0.004
+        ey = lower_band_top + 0.004
+        axis.add_patch(FancyArrowPatch(
+            (sx, sy), (ex, ey),
+            arrowstyle="-|>", mutation_scale=22,
+            linewidth=2.0, color=color, zorder=4,
+        ))
+        if label is not None:
+            axis.text(
+                sx + 0.012, (sy + ey) / 2, label,
+                ha="left", va="center",
+                fontsize=10, style="italic", color=color,
+                bbox={"facecolor": "white", "edgecolor": "none", "pad": 3.0, "alpha": 0.95},
+                zorder=5,
+            )
+
+    horizontal_arrow(("data", 0), ("data", 1))
+    horizontal_arrow(("data", 1), ("data", 2))
+    vertical_band_arrow(
+        upper_band_bottom=rows["data"]["band_y"],
+        lower_band_top=rows["model"]["band_y"] + rows["model"]["band_h"],
+        label="leakage-safe features",
+    )
+    horizontal_arrow(("model", 0), ("model", 1))
+    vertical_band_arrow(
+        upper_band_bottom=rows["model"]["band_y"],
+        lower_band_top=rows["pricing"]["band_y"] + rows["pricing"]["band_h"],
+        label="XGBoost forecast",
+    )
+    horizontal_arrow(("pricing", 0), ("pricing", 1))
+
+    axis.text(
+        0.5, 0.965,
+        "Hotel Demand Forecasting & Pricing MVP — Pipeline Architecture",
+        ha="center", va="center",
+        fontsize=16, weight="bold", color=text_dark,
+    )
+    axis.text(
+        0.5, 0.93,
+        "Three-stage flow: operational data → demand forecasting → bounded pricing recommendations",
+        ha="center", va="center",
+        fontsize=10.5, style="italic", color="#475569",
+    )
+
+    fig.savefig(PIPELINE_ARCHITECTURE_FIGURE, dpi=220, bbox_inches="tight")
     plt.close(fig)
 
 

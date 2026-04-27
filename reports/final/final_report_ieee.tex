@@ -26,7 +26,7 @@ This project develops an end-to-end hotel demand forecasting and pricing-support
 \end{abstract}
 
 \begin{IEEEkeywords}
-hotel demand forecasting, revenue management, XGBoost, random forest, GRU, LSTM, Transformer, dynamic pricing
+hotel demand forecasting, revenue management, XGBoost, random forest, GRU, LSTM, Transformer, dynamic pricing, interpretability
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -36,10 +36,12 @@ The project is motivated by a real business setting using historical operational
 
 The proposal emphasized comparison between classical machine learning and deep learning architectures. This report implements that comparison using simple time-series baselines, Ridge regression, Random Forests \cite{breiman2001random}, XGBoost \cite{chen2016xgboost}, MLP models, LSTM models \cite{hochreiter1997lstm}, GRU models \cite{cho2014gru}, and small Transformer encoders \cite{vaswani2017attention}. The final system uses a two-stage pipeline: first forecast demand, then apply bounded pricing rules.
 
-\section{Data Pipeline}
-The raw data consist of operational workbooks, including reservation-style guest reports, Block RoomSales reports, and ReservationForecast reports. The final cleaned datasets are stored under \texttt{cleaned\_data/}, while derived modeling outputs are stored under \texttt{processed\_data/} and \texttt{reports/}.
+\section{Data and Business Setting}
+The data come from D.\ Hotel Suites \& Spa, an independent 60-room, six-floor hotel located at 1 Country Club Road in Holyoke, Massachusetts. The property serves regional travel demand in the Pioneer Valley, sitting near Route 5 and Interstate 91 between Northampton, Amherst, and Springfield, and roughly forty minutes from Bradley International Airport. Inventory is consistently 60 rooms across all reporting periods, which is the property capacity used throughout the modeling pipeline. The hotel currently sets nightly rates manually, using spreadsheets, historical reference rates, and operator judgment, with no automated demand forecast and no automated pricing recommendation. This is a common situation for independent hotels of this size, because commercial revenue management systems are designed for larger chains and tend to be expensive to integrate for a single small property. The MVP described in this paper is being developed for D.\ Hotel Suites \& Spa as an internal, lower-cost alternative to a commercial system. The author has access to the property's operational reports through a family connection (a partner at the hotel), which is the basis for using a real single-property dataset rather than a public benchmark; further detail on the property and the business motivation is given in Appendix~\ref{app:property}.
 
-The final modeling table is \texttt{processed\_data/modeling\_daily.csv}. It contains 1,096 daily rows and 209 columns covering January 1, 2023 through December 31, 2025. The table is date-grain: each row represents one business date. It joins cleaned room-sales history, reservation forecast fields, and guest-arrival enrichment. The primary target is \texttt{target\_rooms\_sold}.
+The raw data consist of operational workbooks exported from the property's reservations and reporting system, including reservation-style guest reports, Block RoomSales reports, and ReservationForecast reports.
+
+The final modeling table contains 1,096 daily rows and 209 columns covering January 1, 2023 through December 31, 2025. The table is date-grain: each row represents one business date. It joins cleaned room-sales history, reservation forecast fields, and guest-arrival enrichment. The primary forecasting target is daily rooms sold.
 
 Cleaning included parsing multi-line guest report blocks, standardizing dates and numeric fields, normalizing key text values, preserving source lineage, and removing duplicates with an auditable deduplication process. The data quality audit flagged two over-capacity rows and twelve zero-room-sold rows. These rows are retained for traceability, but the primary reported model convention excludes all flagged dates because they are known operational anomalies.
 
@@ -67,74 +69,125 @@ All rolling features are shifted so that the current day's target is not include
 \subsection{Splitting Strategy}
 The dataset is split chronologically. Training uses January 1, 2023 through June 30, 2024; validation uses July 1, 2024 through December 31, 2024; and testing uses calendar year 2025. This matches the operational goal of generalizing to a later time period.
 
-Three data-quality conventions are reported. The full-data reference uses all rows. The over-capacity sensitivity removes only rows where rooms sold exceeded inferred capacity. The primary convention, \texttt{exclude\_all\_flagged}, excludes all current operational anomaly flags.
+Three data-quality conventions are reported. The full-data reference uses all rows. The over-capacity sensitivity removes only rows where rooms sold exceeded inferred capacity. The primary anomaly-excluded convention drops every row tagged by the data-quality audit, and is the convention used for the headline results throughout the paper.
 
 \subsection{Classical and Tree-Based Models}
 Baselines include previous-day demand, previous-week demand, rolling averages, and Ridge regression. Tree-based tabular models include Random Forest and XGBoost. The implementation uses scikit-learn \cite{pedregosa2011scikit} and XGBoost.
 
-Table~\ref{tab:baseline} shows the full-data 2025 test results. XGBoost is best by MAE, while Random Forest has slightly stronger RMSE and $R^2$.
+Table~\ref{tab:baseline} shows the full-data 2025 test results. XGBoost is best by MAE, while Random Forest has slightly stronger RMSE and $R^2$. MAPE values should be read with care: the property has only 60 rooms and the test period contains several low-demand and near-zero-demand dates, so MAPE is sensitive to small denominators and tends to look pessimistic relative to absolute-error metrics. MAE and RMSE are therefore treated as the primary comparison metrics in this report, with MAPE reported for completeness.
 
 \begin{table}[t]
 \centering
 \caption{Full-Data 2025 Test Metrics}
 \label{tab:baseline}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Model & Rows & MAE & RMSE & $R^2$\\
+Model & Rows & MAE & RMSE & MAPE (\%) & $R^2$\\
 \midrule
-XGBoost & 365 & 8.039 & 11.210 & 0.539\\
-Random Forest & 365 & 8.062 & 10.870 & 0.567\\
-Previous Week & 365 & 9.551 & 13.438 & 0.338\\
-Previous Day & 365 & 11.307 & 15.987 & 0.063\\
-Rolling 7d & 365 & 12.528 & 15.107 & 0.164\\
-Ridge & 365 & 12.744 & 14.938 & 0.182\\
-Rolling 28d & 365 & 13.511 & 16.073 & 0.053\\
+XGBoost & 365 & 8.039 & 11.210 & 45.42 & 0.539\\
+Random Forest & 365 & 8.062 & 10.870 & 42.36 & 0.567\\
+Previous Week & 365 & 9.551 & 13.438 & 35.02 & 0.338\\
+Previous Day & 365 & 11.307 & 15.987 & 42.01 & 0.063\\
+Rolling 7d & 365 & 12.528 & 15.107 & 44.45 & 0.164\\
+Ridge & 365 & 12.744 & 14.938 & 52.08 & 0.182\\
+Rolling 28d & 365 & 13.511 & 16.073 & 52.46 & 0.053\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:sensitivity} shows the sensitivity analysis. The primary report result is XGBoost under \texttt{exclude\_all\_flagged}: MAE 7.443, RMSE 9.927, and $R^2$ 0.585.
+Table~\ref{tab:sensitivity} shows the sensitivity analysis. The primary report result is XGBoost under the anomaly-excluded convention: MAE 7.443, RMSE 9.927, and $R^2$ 0.585.
 
 \begin{table}[t]
 \centering
 \caption{Best Learned Model by Data-Quality Convention}
 \label{tab:sensitivity}
-\begin{tabular}{llrrrr}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llrrrrr}
 \toprule
-Scenario & Model & Rows & MAE & RMSE & $R^2$\\
+Scenario & Model & Rows & MAE & RMSE & MAPE (\%) & $R^2$\\
 \midrule
-All flags excl. & XGBoost & 354 & 7.443 & 9.927 & 0.585\\
-Over-cap excl. & RF & 365 & 8.019 & 10.757 & 0.576\\
-Full data & XGBoost & 365 & 8.039 & 11.210 & 0.539\\
+All flags excl. & XGBoost & 354 & 7.443 & 9.927 & 45.62 & 0.585\\
+Over-cap excl. & RF & 365 & 8.019 & 10.757 & 41.61 & 0.576\\
+Full data & XGBoost & 365 & 8.039 & 11.210 & 45.42 & 0.539\\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
-\subsection{Deep Learning Models}
-The deep learning comparison includes tabular MLP models and sequence models. LSTM, GRU, and Transformer candidates use sequential windows ending on each prediction date. The sweep includes lookback windows of 14, 28, 42, 56, and 84 days. PyTorch \cite{paszke2019pytorch} is used for LSTM, GRU, and Transformer training, with AdamW optimization \cite{loshchilov2019adamw}, Smooth L1 loss, gradient clipping, and early stopping on validation loss.
+Fig.~\ref{fig:predicted_vs_actual} compares predicted and actual daily rooms sold across the 2025 test period for XGBoost, Random Forest, and the two strongest heuristic baselines. The learned tabular models track the weekly seasonal cycle and high-occupancy weekends closely; the heuristic baselines either lag the signal (previous-day) or smooth out short-term swings (previous-week).
 
-Table~\ref{tab:deep} compares the strongest models under the primary \texttt{exclude\_all\_flagged} test convention. The best GRU reaches MAE 7.813, and the best Transformer reaches MAE 7.835. These sequence models get close to the tree models, but XGBoost remains best by MAE and Random Forest remains best by RMSE and $R^2$.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{baseline_predicted_vs_actual_test.png}
+    \caption{Predicted versus actual daily rooms sold over the full 2025 test period for the strongest tabular models and two reference baselines.}
+    \label{fig:predicted_vs_actual}
+\end{figure}
+
+\subsection{Deep Learning Models}
+The deep learning comparison includes tabular MLP models and sequence models. LSTM, GRU, and Transformer candidates use sequential windows ending on each prediction date. PyTorch \cite{paszke2019pytorch} is used for LSTM, GRU, and Transformer training, with AdamW optimization \cite{loshchilov2019adamw}, Smooth L1 loss, gradient clipping, and early stopping on validation loss.
+
+\subsubsection{Hyperparameter Sweep}
+Fourteen configurations were trained across the four families: three MLP variants, three LSTM variants, six GRU variants, and two Transformer variants. The search axes are summarized in Table~\ref{tab:hyperparams}. Lookback length was the primary search axis for the sequence models. All sequence configurations use one recurrent (or Transformer) layer; Transformer variants use four attention heads. Dropout is zero for LSTM and GRU and 0.10--0.15 for Transformer. Patience for early stopping ranges from 90 to 120 epochs depending on the configuration. Targets and feature inputs are standardized before training. The sweep is intentionally scoped: the goal is an honest comparison rather than an exhaustive neural architecture search.
 
 \begin{table}[t]
 \centering
-\caption{Tree Models vs. Deep Learning on Unflagged 2025 Test Rows}
-\label{tab:deep}
-\begin{tabular}{lrrrr}
+\caption{Deep Learning Hyperparameter Sweep}
+\label{tab:hyperparams}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llllr}
 \toprule
-Model & Rows & MAE & RMSE & $R^2$\\
+Family & Lookback (days) & Hidden size & Learning rate & Configs\\
 \midrule
-XGBoost & 354 & 7.443 & 9.927 & 0.585\\
-Random Forest & 354 & 7.466 & 9.834 & 0.593\\
-GRU 56d wide & 354 & 7.813 & 10.588 & 0.528\\
-GRU 56d regularized & 354 & 7.822 & 10.616 & 0.525\\
-Transformer 28d & 354 & 7.835 & 10.305 & 0.553\\
-GRU 42d & 354 & 7.937 & 10.587 & 0.528\\
-Transformer 56d & 354 & 7.945 & 10.561 & 0.530\\
+MLP         & --                       & (32), (64,32)        & 0.0007--0.001  & 3\\
+LSTM        & 14, 28, 56               & 32, 48, 64           & 0.0005--0.001  & 3\\
+GRU         & 14, 28, 42, 56, 84       & 32, 48, 64           & 0.0005--0.001  & 6\\
+Transformer & 28, 56                   & 48, 64 (4 heads)     & 0.0004--0.0005 & 2\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsubsection{Headline Results}
+Table~\ref{tab:deep} compares the strongest model from each architecture family under the primary anomaly-excluded test convention, including all four deep learning architectures from the proposal. The best GRU reaches MAE 7.813, and the best Transformer reaches MAE 7.835. The best LSTM reaches MAE 8.662, and the best MLP only reaches MAE 12.663 with a negative $R^2$, indicating that purely tabular MLPs do not generalize on this small dataset.
+
+\begin{table}[t]
+\centering
+\caption{Best Model per Family on Unflagged 2025 Test Rows}
+\label{tab:deep}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Rows & MAE & RMSE & MAPE (\%) & $R^2$\\
+\midrule
+XGBoost & 354 & 7.443 & 9.927 & 45.62 & 0.585\\
+Random Forest & 354 & 7.466 & 9.834 & 42.67 & 0.593\\
+GRU 56d wide & 354 & 7.813 & 10.588 & 48.82 & 0.528\\
+Transformer 28d & 354 & 7.835 & 10.305 & 43.23 & 0.553\\
+LSTM 56d & 354 & 8.662 & 11.210 & 51.68 & 0.471\\
+MLP medium & 354 & 12.663 & 16.631 & 64.36 & $-$0.165\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsubsection{Statistical Significance}
+The point-estimate MAE differences between XGBoost and the strongest sequence models are small relative to the size of the test set, so the headline ranking deserves a statistical check. Table~\ref{tab:bootstrap} reports paired bootstrap 95\% confidence intervals on the test MAE difference (other model minus XGBoost) using 10,000 resamples of the 354-row unflagged 2025 test set, drawn with replacement at the date level. The Random Forest, best GRU, and best Transformer intervals all span zero, so under this paired date-level bootstrap the XGBoost advantage over those models is not statistically distinguishable on this test set. Only the best LSTM and the best MLP intervals exclude zero, meaning XGBoost is significantly better than those families at 95\% confidence under the same procedure but only nominally better than Random Forest, GRU, and Transformer. This is the more accurate way to read Table~\ref{tab:deep}: under this paired date-level bootstrap the strong tree and best sequence models form a statistical tie, while LSTM and MLP variants tested here trail meaningfully.
+
+\begin{table}[t]
+\centering
+\caption{Paired Bootstrap 95\% CIs vs.\ XGBoost (10,000 Resamples, 354 Rows)}
+\label{tab:bootstrap}
+\begin{tabular}{lrr}
+\toprule
+Comparison & $\Delta$MAE & 95\% CI\\
+\midrule
+Random Forest    & $+0.023$ & $[-0.315,\ +0.349]$\\
+Best GRU         & $+0.369$ & $[-0.203,\ +0.925]$\\
+Best Transformer & $+0.392$ & $[-0.215,\ +0.978]$\\
+Best LSTM        & $+1.219$ & $[+0.656,\ +1.789]$\\
+Best MLP         & $+5.220$ & $[+4.090,\ +6.324]$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Fig.~\ref{fig:deep} visualizes the model comparison. The main interpretation is that sequence neural networks are viable for this task, but the dataset is small enough that tree-based tabular models still generalize slightly better.
+Fig.~\ref{fig:deep} visualizes the model comparison. The honest interpretation is that sequence neural networks are statistically competitive with tree-based tabular models on this dataset, but the available sample size does not give a sequence architecture a significant advantage over XGBoost. The deep learning hypothesis from the proposal is therefore supported in part: GRU and Transformer match the strongest tabular baselines, but they do not surpass them.
 
 \begin{figure}[t]
     \centering
@@ -144,7 +197,7 @@ Fig.~\ref{fig:deep} visualizes the model comparison. The main interpretation is 
 \end{figure}
 
 \section{Feature Importance}
-The XGBoost feature-importance analysis shows that recent weekly history is the strongest signal. The top features are \texttt{target\_rooms\_sold\_lag\_7d}, \texttt{target\_rooms\_sold\_lag\_14d}, \texttt{block\_room\_revenue\_net\_lag\_7d}, day-of-week encoding, and one-day lagged room revenue. This is consistent with the domain expectation that hotel demand has strong weekly seasonality and short-term persistence.
+The XGBoost feature-importance analysis shows that recent weekly history is the strongest signal. The top features are the seven-day and fourteen-day lags of rooms sold, the seven-day lag of net room revenue, the day-of-week encoding, and the one-day lag of net room revenue. This is consistent with the domain expectation that hotel demand has strong weekly seasonality and short-term persistence.
 
 \begin{figure}[t]
     \centering
@@ -152,6 +205,13 @@ The XGBoost feature-importance analysis shows that recent weekly history is the 
     \caption{Top XGBoost feature importances under the primary training setup.}
     \label{fig:importance}
 \end{figure}
+
+\section{Interpretability and Model Choice}
+Under the paired date-level bootstrap reported in Table~\ref{tab:bootstrap}, XGBoost, Random Forest, the best GRU, and the best Transformer are statistically indistinguishable on test MAE. When predictive accuracy is indistinguishable, principled model selection requires a second axis. For a pricing-support MVP that surfaces ADR recommendations to a human revenue manager, that second axis is interpretability: a recommendation is operationally useful only if the manager can audit why the model is asking to raise or lower the rate, and an unexplained ADR change is hard to distinguish from a guess. This framing follows the position taken in high-stakes interpretable-ML work \cite{rudin2019stopblackbox}, which argues that models affecting real-world decisions should be inherently or post-hoc explainable rather than treated as opaque oracles.
+
+The model families differ substantially on this axis. The heuristic baselines are trivially interpretable but are too inaccurate for production use. Ridge regression provides global linear coefficients but underperforms by a wide margin and cannot capture the nonlinear interactions present in hotel demand. Random Forest and XGBoost are tree ensembles whose individual trees are inspectable and which support mature post-hoc explanation tools: feature importance, partial dependence, and local Shapley-value attributions \cite{lundberg2017shap} that map any single prediction back to the features that drove it. The MLP, LSTM, and GRU sequence models are less directly interpretable: post-hoc methods such as permutation importance, LIME \cite{ribeiro2016lime}, integrated gradients, and SHAP applied to the neural model are possible but require additional engineering, and their explanations are noisier on a 1,096-row dataset. Transformer attention weights provide a partial view of which past timesteps the model attends to, but attention is not a direct substitute for feature attribution.
+
+Combining the bootstrap and interpretability views resolves the model choice more cleanly than the raw MAE table alone suggests. XGBoost is statistically tied with the strongest sequence models on accuracy but is materially more transparent. The feature-importance result in Fig.~\ref{fig:importance} already shows that the model's strongest signals are seven-day and fourteen-day lagged rooms sold, lagged room revenue, and day-of-week encoding --- features a hotel manager would recognize as the same signals they themselves use, which is a useful sanity check on the model's logic. A SHAP-based per-prediction explanation could be added without retraining, because tree-specific SHAP implementations exist for XGBoost. The same level of explanation would require additional engineering for the GRU or Transformer with no accuracy gain in return. Under the criterion that the model must support human-approved pricing decisions, the tie among XGBoost, GRU, and Transformer on accuracy resolves in favor of XGBoost on interpretability. The recommended choice is therefore not "XGBoost wins by MAE" but "XGBoost is the right operational choice because it is statistically as accurate as the best sequence models while being more auditable for a revenue manager."
 
 \section{Pricing Recommendation Layer}
 The pricing layer uses the selected XGBoost forecast. Forecast occupancy is computed as forecast rooms sold divided by total property rooms. A reference ADR is chosen from historical same-day ADR with rolling and lagged ADR fallbacks. The pricing rule then applies bounded demand-based adjustments.
@@ -232,107 +292,45 @@ Date & Day & Actual & Forecast & Hist. ADR & Agg. ADR & Cons. ADR & Agg. Delta\\
 \end{table*}
 
 \section{Limitations}
-There are several limitations. First, the pricing simulation does not model demand response to price changes. A real revenue management system would need elasticity estimates, competitor pricing, channel mix, and customer response modeling. Second, some proposal features such as competitor prices and event indicators were only included if available; the final dataset did not contain a reliable external competitor or event feed. Third, January 2025 zero-room-sold dates were flagged as likely operational anomalies and should not be used as primary business evidence without verification. Fourth, the dataset is small for deep learning. The best GRU and Transformer models get close, but the tabular tree models remain better suited to the available sample size.
+There are several limitations. First, the pricing simulation does not model demand response to price changes. A real revenue management system would need elasticity estimates, competitor pricing, channel mix, and customer response modeling. Second, some proposal features such as competitor prices and event indicators were only included if available; the final dataset did not contain a reliable external competitor or event feed. Third, booking lead time and booking pace were proposed as candidate features but are not engineered in the final model, because the only multi-record reservation source covers 2025 only and using it as training history would overlap with the held-out test period. Fourth, the proposal allowed either date-grain or date-room-type-grain modeling; the final implementation uses date-grain only because the available daily sample size already limits deep learning generalization, and a per-room-type breakdown would further fragment the signal. Fifth, January 2025 zero-room-sold dates were flagged as likely operational anomalies and should not be used as primary business evidence without verification. Finally, the dataset is small for deep learning: the best GRU and Transformer models get close, but the tabular tree models remain better suited to the available sample size.
 
 \section{Conclusion}
 This project implements the proposed hotel demand forecasting and pricing-support MVP end to end. The final system cleans operational reports, builds a daily modeling table, audits data quality, compares classical baselines against deep learning models, selects a primary demand model, and converts forecasts into bounded pricing recommendations.
 
-The strongest forecasting result is XGBoost under the \texttt{exclude\_all\_flagged} convention, with test MAE 7.443, RMSE 9.927, and $R^2$ 0.585. Deep learning models provide a meaningful comparison: the best GRU reaches MAE 7.813 and the best Transformer reaches MAE 7.835, close to but not better than XGBoost. The pricing layer shows practical business potential under static assumptions, with simulated unflagged 2025 revenue lifts of 4.37\% for the aggressive scenario and 2.18\% for the conservative scenario.
+The strongest forecasting result is XGBoost under the anomaly-excluded convention, with test MAE 7.443, RMSE 9.927, and $R^2$ 0.585. Deep learning models provide a meaningful comparison: the best GRU reaches MAE 7.813 and the best Transformer reaches MAE 7.835. Under a paired date-level bootstrap on the 354-row test set, the XGBoost advantage over Random Forest, the best GRU, and the best Transformer is not statistically significant at 95\% confidence, while the advantage over the best LSTM and best MLP is. The honest summary is therefore that the strongest tabular and sequence models tested form a statistical tie on this dataset, with LSTM and MLP variants trailing significantly. The pricing layer shows practical business potential under static assumptions, with simulated unflagged 2025 revenue lifts of 4.37\% for the aggressive scenario and 2.18\% for the conservative scenario.
 
-Overall, the final recommendation is to use XGBoost as the MVP forecasting model, present GRU and Transformer results as strong deep learning comparisons, and treat the pricing layer as a bounded decision-support tool rather than a complete commercial revenue management system.
+Overall, the final recommendation is to use XGBoost as the MVP forecasting model. The justification is no longer purely accuracy-based: among the strongest models, accuracy ties at 95\% confidence under this paired date-level bootstrap, and XGBoost is selected because it is the most interpretable of the tied models and therefore the easiest for a revenue manager to audit and approve. GRU and Transformer results are presented as strong deep learning comparisons that match XGBoost's accuracy but require additional explanation tooling for operational use. The pricing layer is treated as a bounded decision-support tool rather than a complete commercial revenue management system.
 
 \appendices
 
-\section{Repository Reproducibility Notes}
+\section{Property and Business Context}
+\label{app:property}
+The MVP target property is D.\ Hotel Suites \& Spa, an independent 60-room hotel in Holyoke, Massachusetts. The building has six floors and is located at 1 Country Club Road, near Route 5 and Interstate 91, on the edge of Holyoke Country Club. The property serves Pioneer Valley travel demand, with the most relevant nearby drivers being Northampton (immediately adjacent), Amherst (about fifteen minutes north), Springfield (about fifteen minutes south), and Bradley International Airport (about forty minutes south). The hotel was previously operated under the Country Inn \& Suites Holyoke flag and has since been rebranded as an independent property. Inventory consists of a regular room class and a suite class, totaling 60 rooms; on-property amenities include a spa, indoor pool, fitness center, breakfast service, and a bar and restaurant. The 60-room inventory figure is consistent across every operational reporting period in the dataset and is used directly as the property capacity throughout the modeling and pricing pipeline. The two over-capacity rows flagged in the data-quality audit correspond to dates where the source report shows rooms sold above 60, which is mechanically impossible given the inventory and is therefore treated as an operational reporting anomaly rather than real demand.
 
-This appendix is written as an audit trail for the code and artifacts in the project repository rather than as an additional results section. The main paper reports the most important model and pricing outcomes. The appendix records how those outcomes are produced, what assumptions were made during cleaning, and which files in the repository correspond to each stage of the pipeline. This follows the purpose of appendices in many machine-learning papers: details that are too operational for the main narrative are preserved so that an evaluator can reproduce and critique the experiment.
+The business motivation for this project is direct and specific. The property currently sets nightly room rates entirely by hand, using spreadsheets, historical patterns, and operator judgment. There is no automated demand forecast and no automated pricing recommendation; every adjustment is a manual decision made by the team that runs the property. This is a common situation for independent hotels of this size, because commercial revenue management systems are generally designed for chains or larger inventories and tend to carry setup, integration, and licensing costs that are difficult to justify for a single 60-room property. The MVP described in this paper is intended to fill that gap: it produces internally usable demand forecasts and bounded ADR recommendations from the same operational reports the team already runs, and it deliberately keeps the recommendation step bounded and human-approved rather than fully automated. The author's family connection to a partner at the property is what made it possible to use this particular dataset for an academic project; the data are not publicly available, but the modeling code, evaluation harness, and report-generation pipeline are open at the repository linked in Appendix~\ref{app:repo}, with personally identifiable guest information excluded from the modeling artifacts. The research goal of the proposal --- comparing classical machine learning and deep learning architectures on hotel demand forecasting --- and the practical goal of the property --- replacing fully manual pricing with a model-supported, manager-approved recommendation flow --- are aligned, because both require an accurate forecast that an operator can audit and trust before applying it to live rates.
 
-The full source code, cleaning scripts, modeling pipeline, pricing layer, and report artifacts are publicly available at \url{https://github.com/jackdemarinis/CSC_561_Final_Project}.
+\section{Repository, Reproduction, and Artifacts}
+\label{app:repo}
+The full source code, cleaning scripts, modeling pipeline, pricing layer, and report artifacts are publicly available at \url{https://github.com/jackdemarinis/CSC_561_Final_Project}. Raw workbooks live in \texttt{Data/}; cleaned outputs in \texttt{cleaned\_data/}; derived modeling features in \texttt{processed\_data/}; metrics, figures, and the IEEE report under \texttt{reports/}. Source code is split under \texttt{src/} into feature construction, model training, evaluation, and pricing. Tables and figures in the paper are generated from the same CSV and JSON artifacts produced by the scripts.
 
-\subsection{Repository Organization}
-The repository is organized around a simple experimental workflow. Raw operational workbooks are stored in \texttt{Data/}. The original project proposal and assignment files are stored in \texttt{Documents/}. Cleaned outputs are written to \texttt{cleaned\_data/}; derived modeling features are written to \texttt{processed\_data/}; final metrics, figures, summaries, and the IEEE report are written under \texttt{reports/}. The source code is split by responsibility under \texttt{src/}: feature construction, model training, evaluation, and pricing. This organization matters because the report is not a hand-written result summary disconnected from the code; the tables and figures in the paper are generated from the same CSV and JSON artifacts used by the scripts.
+The reproduction order is: clean operational exports (\texttt{scripts/clean\_new\_operational\_reports.py}); build guest daily enrichment and the date-grain modeling table (\texttt{src/features/}); audit data quality (\texttt{src/evaluation/audit\_modeling\_data\_quality.py}); train baselines, run sensitivity, and train deep learning models (\texttt{src/models/}, \texttt{src/evaluation/run\_baseline\_sensitivity.py}); build pricing recommendations (\texttt{src/pricing/}); and compile \texttt{reports/final/final\_report\_ieee.tex}. The central artifact is \texttt{processed\_data/modeling\_daily.csv}: 1,096 daily rows from 2023-01-01 through 2025-12-31, with no missing or duplicate business dates. Train ends 2024-06-30; validation runs through 2024-12-31; test is calendar year 2025.
 
-The main script entry points are as follows. \texttt{scripts/clean\_new\_operational\_reports.py} parses the raw hotel report exports and creates the cleaned operational datasets. \texttt{src/features/build\_guest\_daily\_enrichment.py} converts cleaned reservation-style guest records into daily arrival, room-type, market-segment, and stay-proxy features. \texttt{src/features/build\_daily\_modeling\_table.py} joins the cleaned daily Block RoomSales data, ReservationForecast data, and guest enrichment into \texttt{processed\_data/modeling\_daily.csv}. \texttt{src/evaluation/audit\_modeling\_data\_quality.py} creates anomaly-review records. \texttt{src/models/train\_baselines.py}, \texttt{src/evaluation/run\_baseline\_sensitivity.py}, and \texttt{src/models/train\_deep\_learning.py} generate the forecasting comparisons. \texttt{src/pricing/build\_pricing\_recommendations.py} builds ADR recommendations and static revenue simulations. Finally, \texttt{src/evaluation/build\_final\_report\_artifacts.py} and \texttt{src/evaluation/build\_report\_summary.py} generate the final report support files.
+Result tables and figures map directly to subfolders: \texttt{reports/audit/} for data-quality flags, \texttt{reports/baselines/} and \texttt{reports/deep\_learning/} for model metrics, \texttt{reports/pricing/} for ADR recommendations and business metrics, and \texttt{reports/figures/} for PNG figures. Inspecting those CSV/JSON files is the quickest way to check whether the PDF has drifted from current code output.
 
-The generated report folder is deliberately separated into subfolders. \texttt{reports/audit/} contains data-quality flags; \texttt{reports/baselines/} contains baseline and sensitivity predictions and metrics; \texttt{reports/deep\_learning/} contains neural-model predictions and comparison files; \texttt{reports/pricing/} contains the ADR recommendation outputs and business metrics; \texttt{reports/figures/} contains PNG figures; and \texttt{reports/final/} contains the IEEE \LaTeX{} source, bibliography, PDF, and generated project summary. The organization is intended to make it possible to trace every claim in the paper back to a concrete artifact without scanning a flat report folder.
+\section{Data Sources and Modeling Policy}
+\subsection{Data Sources}
+Three operational families feed the modeling table. Block RoomSales (2023--2025) provides daily property-level rooms sold, revenue, ADR, RevPAR, and inventory; reconciliation checks confirm room-type rows plus deduplicated adjustment rows tie to property daily totals, and inferred hotel inventory is 60 rooms throughout. ReservationForecast files (2023--2024) overlap exactly with Block on rooms sold, out-of-order rooms, and net room revenue, but use a different occupancy denominator (sellable rooms vs.\ total inventory); both definitions are kept as explicit columns rather than collapsed. GuestNameList exports are 2025-only reservation reports parsed into 10,579 deduplicated stay-like records. Guest PII (names, emails, confirmation/folio numbers) is used only for cleaning and deduplication and is excluded from modeling features; the daily enrichment aggregates to non-identifying counts, shares, and rates.
 
-\subsection{Reproduction Order}
-The expected reproduction order is pipeline-first, then model-first, then report-first. The cleaned data should be regenerated before modeling if any raw report file changes. After cleaning, the daily enrichment and modeling table should be rebuilt before any metrics are trusted. The report should be rebuilt only after the modeling and pricing artifacts have been refreshed.
-
-The practical order is:
-\begin{itemize}
-\item clean the operational exports into \texttt{cleaned\_data/};
-\item build guest daily enrichment into \texttt{processed\_data/guest\_daily\_enrichment.csv};
-\item build the final date-grain modeling table into \texttt{processed\_data/modeling\_daily.csv};
-\item audit modeling rows and write \texttt{reports/audit/data\_quality\_flags.csv};
-\item train baseline and learned tabular models;
-\item run sensitivity analysis under the three data-quality conventions;
-\item train the neural comparison models;
-\item build pricing recommendations and report figures;
-\item compile \texttt{reports/final/final\_report\_ieee.tex}.
-\end{itemize}
-
-The final modeling table is the central contract between the data work and the model work. It has one row per business date, 1,096 rows, and 209 columns covering January 1, 2023 through December 31, 2025. It has no missing business dates and no duplicate business dates. The forecasting target is \texttt{target\_rooms\_sold}. The model split is chronological: training through June 30, 2024; validation from July 1, 2024 through December 31, 2024; and testing on calendar year 2025. The main paper uses 2025 as the held-out evaluation period because it is the only full future year after the 2023--2024 training and validation history.
-
-\section{Data Processing Details}
-
-\subsection{Block RoomSales Processing}
-The Block RoomSales exports are the most important operational source because they provide continuous daily property-level rooms sold, revenue, ADR, RevPAR, inventory, out-of-order rooms, transient rooms, and group rooms from 2023 through 2025. The cleaned Block family contains 1,096 daily property-total rows, 2,192 room-class rows, 10,960 room-type rows, and 10 special adjustment rows. The inferred hotel inventory is consistently 60 rooms across all Block files.
-
-The raw Block workbooks are not simple flat files. The cleaning code treats date rows as property-level totals, \texttt{Standard} and \texttt{Suite} rows as room-class rollups, and ten room-type codes as leaf room types. Rows labeled \texttt{***} are preserved separately as special adjustment rows rather than mixed into room type rows. This distinction prevents double counting: room-class rows summarize room types, while adjustment rows can carry revenue-only corrections that should not be interpreted as normal room inventory. Summary sections and report footnotes are excluded from the cleaned analytical tables.
-
-The Block processing includes reconciliation checks. Room-type rows plus deduplicated adjustment rows reconcile to property daily totals for rooms sold, transient rooms, group rooms, day-use rooms, comp rooms, out-of-order rooms, on-market rooms, gross revenue, and net revenue. The cleaning summary also confirms that each business date has exactly ten leaf room-type rows. Those checks are important because the final forecast target comes from this source family.
-
-\subsection{ReservationForecast Processing}
-The ReservationForecast files cover 2023 and 2024 with 731 daily observations and no missing dates. They provide arrivals, departures, stayovers, rooms sold, revenue, ADR, RevPAR, transient rooms, and group-specific fields. These reports are useful for validation and enrichment because they overlap fully with the 2023--2024 Block RoomSales history. On overlapping dates, rooms sold, out-of-order rooms, and net room revenue match exactly against the Block family.
-
-One important caveat is the occupancy denominator. The cleaned summaries show that ReservationForecast occupancy is much closer to rooms sold divided by on-market rooms, while Block RoomSales occupancy is based on total property inventory. The final modeling table therefore keeps occupancy-definition columns that make the difference explicit, rather than forcing the two reports into a single ambiguous occupancy field. This matters for interpretation because a day with out-of-order rooms can have different reported occupancy depending on whether the denominator is total rooms or sellable rooms.
-
-\subsection{Guest-List Processing and Privacy}
-The GuestNameList exports are reservation-style reports for 2025. They are not one-row-per-stay tables. Each logical reservation appears as a multi-line block with report-specific row structure. The parser converts these blocks into 18,365 provisional records and then deduplicates them into 10,579 cleaned stay-like records. The duplicate process removes 7,786 duplicate rows across 5,348 duplicate groups, keeping the most complete copy and preserving source audit fields.
-
-The guest-list data contain personally identifiable information, including guest names, emails, comments, confirmation numbers, folio numbers, and room numbers. These fields are useful for cleaning and deduplication, but they are not used as forecasting features. The daily enrichment output explicitly excludes those PII columns. Instead, it aggregates into daily counts and rates such as arrivals by status, market-segment counts and shares, room-type arrival shares, average booked rate, average nights, and stay room-night proxies. This design keeps the model focused on operational signals while avoiding direct use of guest identity information.
-
-The guest-derived features are also treated cautiously because the guest-list source mainly covers 2025. They are useful for context and final test-period diagnostics, but they are not treated as a complete multi-year historical signal for the baseline forecasting task. This is one reason the learned model feature selector excludes same-day guest-enrichment fields from forecasting inputs.
-
-\section{Modeling, Leakage Control, and Sensitivity}
-
-\subsection{Feature Policy}
-The forecasting task is set up as a daily time-series regression problem. The model may use calendar features and historical shifted signals, but not same-day operational outcomes that would be unavailable when forecasting future demand. The feature groups include date fields, cyclical encodings for day of week, month, and day of year, lag features at 1, 7, 14, 28, and 365 days, and rolling windows over 7, 14, 28, and 56 days. Historical base columns include rooms sold, net ADR, net room revenue, and reported occupancy.
-
-This policy is implemented in \texttt{src/models/train\_baselines.py}. Direct baselines use shifted target history only. Learned tabular models use selected date and historical lag/rolling fields. Same-day Block fields, ReservationForecast fields, source lineage columns, and audit fields are blocked unless they appear only as lagged or rolling historical versions. This is the most important experimental safeguard in the repository because leakage would otherwise make the hotel forecast look artificially strong.
-
-\subsection{Model Families}
-The experiment compares simple historical baselines, Ridge regression, Random Forest, XGBoost, MLP variants, and sequence neural networks. The direct baselines represent what a hotel analyst could do without machine learning: yesterday's demand, the same weekday last week, and short rolling averages. Ridge regression provides a linear learned reference. Random Forest and XGBoost are the strongest tabular approaches for the available sample size. The MLP, LSTM, GRU, and Transformer variants test the project proposal's deep learning hypothesis.
-
-The neural models are intentionally modest. The sequence models use lookback windows from 14 to 84 days, Smooth L1 loss, AdamW optimization, gradient clipping, and validation-loss early stopping. This avoids presenting an oversized neural architecture for a dataset with only three years of daily records. The final result is therefore not that deep learning is impossible for hotel forecasting. The narrower conclusion is that, for this repository's current data volume and feature set, tree-based tabular models generalize better than the tested neural sequence models.
+\subsection{Feature Policy and Leakage Control}
+The forecasting task uses calendar features (date fields, cyclical day-of-week, month, and day-of-year encodings), lag features at 1, 7, 14, 28, and 365 days, and rolling windows over 7, 14, 28, and 56 days, all over rooms sold, net ADR, net room revenue, and reported occupancy. Same-day Block fields, raw ReservationForecast fields, same-day guest enrichment, and source lineage columns are blocked from learned model inputs unless they appear only as lagged or rolling historical versions. Guest-derived features are also treated cautiously because the guest-list source mainly covers 2025 and is not a complete multi-year historical signal. This leakage policy is the most important experimental safeguard in the repository.
 
 \subsection{Data-Quality Sensitivity}
-The anomaly audit writes review records rather than modifying the source data. Fourteen rows are flagged in the full modeling table: twelve zero-room-sold rows and two rows where rooms sold exceed the 60-room property inventory. The primary convention excludes all flagged rows, which leaves 354 test rows in 2025. The sensitivity convention that excludes only over-capacity rows leaves 365 test rows because the zero-room-sold dates remain in the test period. The full-data convention also uses 365 test rows.
+Fourteen anomaly rows are flagged in the modeling table: twelve zero-room-sold dates and two rows where rooms sold exceed the 60-room inventory. The primary \texttt{exclude\_all\_flagged} convention drops all fourteen, leaving 354 test rows in 2025. The decision-level sensitivity is stable: XGBoost is best by MAE under both the exclude-all-flagged and full-data conventions, and Random Forest is best under the over-capacity-only convention. Random Forest is sometimes stronger by RMSE or $R^2$, which is why both tree models remain visible in the main comparison.
 
-The decision-level sensitivity result is stable. Under the primary exclude-all-flagged convention, XGBoost is the best learned model by MAE with 7.443. Under the over-capacity-only convention, Random Forest is best by MAE with 8.019. Under the full-data reference convention, XGBoost is again best by MAE with 8.039. These differences justify two choices in the main report. First, the primary result should use the exclude-all-flagged convention because it avoids allowing known operational anomalies to dominate the business interpretation. Second, Random Forest should remain visible in the comparison because it is competitive and sometimes stronger by RMSE or $R^2$.
+\section{Pricing Layer Notes}
+The pricing layer is a bounded decision-support rule, not a revenue management optimizer. It starts from the selected XGBoost forecast, converts forecast rooms sold into forecast occupancy against the 60-room inventory, assigns a demand band, and adjusts a reference ADR drawn from historical same-day net ADR with rolling, lagged, and median fallbacks. Recommendations are bounded by minimum ADR, maximum ADR, and a 20\% daily move cap from the reference. Two scenarios (aggressive and conservative) are reported because a single pricing curve would imply false precision; both are static counterfactuals applied to actual realized rooms sold and do not model price elasticity, competitor reaction, or channel mix.
 
-The deep learning comparison is also stable in interpretation. The best neural model is \texttt{gru\_56d\_wide}, with MAE 7.813 on the unflagged 2025 test period. The best Transformer reaches MAE 7.835. These results are close enough to show that sequence models are meaningful, but not close enough to replace XGBoost as the recommended MVP model. The weaker MLP results also suggest that simply adding neural-network capacity to tabular features is not sufficient for this small dataset.
-
-\section{Pricing Appendix and Deployment Notes}
-
-\subsection{Pricing Rule Rationale}
-The pricing layer is a bounded decision-support rule, not a complete revenue management optimizer. It starts with the selected XGBoost forecast, converts forecast rooms sold into forecast occupancy using the 60-room inventory, assigns a demand band, and adjusts a reference ADR. The reference ADR is chosen from historical same-day net ADR when available, then rolling or lagged ADR fallbacks, and finally a median nonzero ADR fallback. The recommended ADR is bounded by a minimum ADR, maximum ADR, and maximum 20\% daily movement from the reference ADR.
-
-Two scenarios are reported because a single pricing curve would imply false precision. The aggressive scenario uses larger upward and downward movements, while the conservative scenario uses smaller movements. The aggressive rule produces a 4.37\% static revenue lift on unflagged 2025 test days, and the conservative rule produces a 2.18\% lift. These are static counterfactuals: they apply recommended ADR to actual realized rooms sold. They do not estimate whether customers would still book at the higher price, whether competitors would react, or whether channel mix would change.
-
-\subsection{Recommended Production Extensions}
-The current system is suitable as an academic MVP and as a prototype for hotel pricing support, but not as an automated pricing engine. A production version should add at least four extensions. First, it should estimate price elasticity or use controlled experiments so that ADR changes affect expected rooms sold instead of being applied to fixed historical occupancy. Second, it should add competitor-rate, local-event, and holiday-demand feeds. Third, it should monitor forecast errors by day of week, occupancy band, month, and high-demand periods so the model can be recalibrated before systematic misses affect pricing. Fourth, it should require human approval for flagged dates, unusually high ADR changes, and dates near sellout.
-
-The current recommendation should therefore be interpreted conservatively. The model can identify days when historical demand signals suggest higher or lower occupancy pressure. It can translate that signal into bounded ADR advice. It cannot yet answer whether a specific ADR change would maximize profit after accounting for customer response, cancellation behavior, competitor movement, or distribution costs.
-
-\section{Artifact Traceability}
-
-The major report claims map to files in the repository. The final modeling table is \texttt{processed\_data/modeling\_daily.csv}. Cleaning summaries are stored as JSON files in \texttt{cleaned\_data/} and \texttt{processed\_data/}. Baseline and sensitivity metrics are stored in \texttt{reports/baselines/}. Deep learning metrics are stored in \texttt{reports/deep\_learning/}. Pricing recommendations, business metrics, and high-demand examples are stored in \texttt{reports/pricing/}. Figures are stored in \texttt{reports/figures/}. The final \LaTeX{} source and PDF are stored in \texttt{reports/final/}.
-
-The most important audit artifacts are the data-quality flags, baseline sensitivity metrics, deep-learning comparison metrics, pricing scenario comparison, and pricing business-metric comparison. These live in the \texttt{audit}, \texttt{baselines}, \texttt{deep\_learning}, and \texttt{pricing} report subfolders. Those files are the quickest way to check whether the report has drifted from the current code output. If the report is regenerated after changing the pipeline, these artifacts should be inspected before the PDF is treated as final.
-
-The appendix also records two deliberate exclusions. First, raw PII is not included in modeling artifacts. Guest identity fields remain useful only for cleaning and traceability. Second, the raw STAR monthly benchmarking files are not yet integrated into the forecasting model. They are potentially useful future external features, but the current MVP relies on operational property data rather than competitor benchmarking feeds. These exclusions reduce the feature set, but they make the final experiment more defensible because every included signal has clear availability and source lineage.
+A production version would need at least four extensions: (i) elasticity estimates or controlled experiments so ADR changes affect expected rooms sold rather than being applied to fixed history; (ii) competitor-rate, local-event, and holiday-demand feeds; (iii) error monitoring by day of week, occupancy band, month, and high-demand period; and (iv) human approval for flagged dates, unusually large ADR moves, and near-sellout dates. The current system can identify days when historical signals suggest higher or lower occupancy pressure and translate that into bounded ADR advice; it cannot yet answer whether a specific ADR change maximizes profit after customer response, cancellations, competitor movement, and distribution costs.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

@@ -91,18 +91,25 @@ def load_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return modeling, predictions, flags
 
 
-def build_recommendations(scenario: str = "aggressive") -> tuple[pd.DataFrame, dict]:
+def apply_pricing_rule(
+    forecast: pd.DataFrame,
+    scenario: str = "aggressive",
+    model_name: str = "xgboost",
+) -> pd.DataFrame:
+    """Apply the bounded ADR pricing rule to an arbitrary forecast frame.
+
+    ``forecast`` must contain ``business_date`` and ``forecast_rooms_sold``.
+    All same-day context (historical ADR, rolling/lag fallbacks, flags) is
+    pulled from the modeling table and audit flags on disk.
+    """
     if scenario not in ADJUSTMENT_SCENARIOS:
         raise ValueError(f"Unknown pricing scenario: {scenario}")
 
-    model_name, model_source = selected_model()
-    modeling, predictions, flags = load_inputs()
-    model_predictions = predictions.loc[
-        predictions["split"].eq("test") & predictions["model"].eq(model_name),
-        [DATE_COLUMN, "predicted"],
-    ].rename(columns={"predicted": "forecast_rooms_sold"})
+    forecast = forecast[[DATE_COLUMN, "forecast_rooms_sold"]].copy()
+    forecast[DATE_COLUMN] = pd.to_datetime(forecast[DATE_COLUMN])
 
-    recommendations = modeling.merge(model_predictions, on=DATE_COLUMN, how="inner", validate="1:1")
+    modeling, _predictions, flags = load_inputs()
+    recommendations = modeling.merge(forecast, on=DATE_COLUMN, how="inner", validate="1:1")
     flag_notes = (
         flags.groupby(DATE_COLUMN)
         .agg(
@@ -178,8 +185,21 @@ def build_recommendations(scenario: str = "aggressive") -> tuple[pd.DataFrame, d
         "simulated_revenue_delta_at_actual_rooms",
         "data_quality_review_note",
     ]
-    recommendations = recommendations[output_columns].sort_values(DATE_COLUMN)
+    return recommendations[output_columns].sort_values(DATE_COLUMN).reset_index(drop=True)
 
+
+def build_recommendations(scenario: str = "aggressive") -> tuple[pd.DataFrame, dict]:
+    if scenario not in ADJUSTMENT_SCENARIOS:
+        raise ValueError(f"Unknown pricing scenario: {scenario}")
+
+    model_name, model_source = selected_model()
+    _modeling, predictions, _flags = load_inputs()
+    forecast = predictions.loc[
+        predictions["split"].eq("test") & predictions["model"].eq(model_name),
+        [DATE_COLUMN, "predicted"],
+    ].rename(columns={"predicted": "forecast_rooms_sold"})
+
+    recommendations = apply_pricing_rule(forecast, scenario=scenario, model_name=model_name)
     summary = build_summary(recommendations, model_source, scenario)
     return recommendations, summary
 

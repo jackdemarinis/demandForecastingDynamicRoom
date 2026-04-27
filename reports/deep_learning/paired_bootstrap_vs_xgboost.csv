@@ -1,0 +1,6 @@
+comparison,model,n_rows,xgboost_mae,other_mae,delta_mae_other_minus_xgb,ci_low_95,ci_high_95,ci_excludes_zero
+tree_baseline,random_forest,354,7.4434,7.4659,0.0226,-0.3152,0.349,False
+best_gru,gru_56d_wide,354,7.4434,7.8128,0.3694,-0.2034,0.9246,False
+best_transformer,transformer_28d_small,354,7.4434,7.835,0.3916,-0.2148,0.9778,False
+best_lstm,lstm_56d_regularized,354,7.4434,8.662,1.2186,0.6561,1.7887,True
+best_mlp,mlp_medium,354,7.4434,12.6632,5.2198,4.0902,6.324,True

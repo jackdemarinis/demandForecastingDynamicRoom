@@ -3,10 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import sklearn
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
@@ -15,8 +17,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 try:
+    import xgboost
     from xgboost import XGBRegressor
 except Exception:  # pragma: no cover - xgboost is optional at runtime.
+    xgboost = None
     XGBRegressor = None
 
 
@@ -25,6 +29,7 @@ MODELING_INPUT = REPO_ROOT / "processed_data" / "modeling_daily.csv"
 REPORTS_DIR = REPO_ROOT / "reports"
 BASELINE_REPORTS_DIR = REPORTS_DIR / "baselines"
 FIGURES_DIR = REPORTS_DIR / "figures"
+MODELS_DIR = REPO_ROOT / "models" / "baselines"
 
 PREDICTIONS_OUTPUT = BASELINE_REPORTS_DIR / "baseline_predictions.csv"
 METRICS_CSV_OUTPUT = BASELINE_REPORTS_DIR / "baseline_metrics.csv"
@@ -205,8 +210,13 @@ def fit_predict_models(
     x_train = train_model_frame[feature_columns]
     y_train = train_model_frame[TARGET_COLUMN]
 
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    persisted_models: dict[str, str] = {}
     for model_name, model in model_specs.items():
         model.fit(x_train, y_train)
+        artifact_path = MODELS_DIR / f"{model_name}.joblib"
+        joblib.dump(model, artifact_path)
+        persisted_models[model_name] = str(artifact_path.relative_to(REPO_ROOT))
         for split_name, split_frame in split_frames.items():
             predicted = model.predict(split_frame[feature_columns])
             predictions = add_prediction(
@@ -218,7 +228,9 @@ def fit_predict_models(
                 predicted,
             )
 
-    return predictions, pd.DataFrame(metrics).sort_values(["split", "mae", "rmse"]).reset_index(drop=True)
+    metrics_frame = pd.DataFrame(metrics).sort_values(["split", "mae", "rmse"]).reset_index(drop=True)
+    metrics_frame.attrs["persisted_models"] = persisted_models
+    return predictions, metrics_frame
 
 
 def plot_predicted_vs_actual(predictions: pd.DataFrame, metrics: pd.DataFrame) -> None:
@@ -277,6 +289,31 @@ def write_outputs(
 ) -> None:
     BASELINE_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+    (MODELS_DIR / "feature_columns.json").write_text(
+        json.dumps(feature_columns, indent=2), encoding="utf-8"
+    )
+    persisted_models = metrics.attrs.get("persisted_models", {})
+    manifest = {
+        "family": "baseline",
+        "target": TARGET_COLUMN,
+        "feature_columns_file": "feature_columns.json",
+        "train_window": {
+            "start": train[DATE_COLUMN].min().date().isoformat(),
+            "end": train[DATE_COLUMN].max().date().isoformat(),
+            "rows": int(len(train)),
+        },
+        "library_versions": {
+            "sklearn": sklearn.__version__,
+            "xgboost": xgboost.__version__ if xgboost is not None else None,
+        },
+        "models": [
+            {"name": name, "kind": "sklearn_pipeline", "file": Path(path).name}
+            for name, path in persisted_models.items()
+        ],
+    }
+    (MODELS_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     predictions.to_csv(PREDICTIONS_OUTPUT, index=False, date_format="%Y-%m-%d")
     metrics.to_csv(METRICS_CSV_OUTPUT, index=False)

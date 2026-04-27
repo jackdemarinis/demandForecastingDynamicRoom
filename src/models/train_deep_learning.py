@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -46,6 +47,8 @@ DEEP_LEARNING_REPORTS_DIR = REPORTS_DIR / "deep_learning"
 FIGURES_DIR = REPORTS_DIR / "figures"
 FLAGS_INPUT = AUDIT_REPORTS_DIR / "data_quality_flags.csv"
 SENSITIVITY_METRICS_INPUT = BASELINE_REPORTS_DIR / "baseline_sensitivity_metrics.csv"
+
+MODELS_DIR = REPO_ROOT / "models" / "deep_learning"
 
 PREDICTIONS_OUTPUT = DEEP_LEARNING_REPORTS_DIR / "deep_learning_predictions.csv"
 METRICS_OUTPUT = DEEP_LEARNING_REPORTS_DIR / "deep_learning_metrics.csv"
@@ -250,9 +253,11 @@ def train_mlp_models(
     train_model_frame = train.dropna(subset=[TARGET_COLUMN]).copy()
     split_frames = {"validation": validation, "test": test}
 
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
     for model_name, spec in mlp_specs().items():
         model = build_mlp_model(spec)
         model.fit(train_model_frame[feature_columns], train_model_frame[TARGET_COLUMN])
+        joblib.dump(model, MODELS_DIR / f"{model_name}.joblib")
         for split_name, split_frame in split_frames.items():
             predicted = model.predict(split_frame[feature_columns])
             predictions = add_prediction(
@@ -384,7 +389,7 @@ def train_one_sequence_model(
     train: pd.DataFrame,
     validation: pd.DataFrame,
     test: pd.DataFrame,
-) -> tuple[dict, dict[str, np.ndarray], dict[str, list[int]]]:
+) -> tuple[dict, dict[str, np.ndarray], dict[str, list[int]], dict | None]:
     if torch is None:
         raise RuntimeError("PyTorch is required for LSTM/GRU sequence models.")
 
@@ -477,7 +482,7 @@ def train_one_sequence_model(
         "best_validation_loss_scaled": best_validation_loss,
         "train_sequence_rows": len(train_indices),
     }
-    return metadata, predictions, endpoint_indices
+    return metadata, predictions, endpoint_indices, best_state
 
 
 def add_sequence_prediction(
@@ -523,13 +528,25 @@ def train_sequence_models(
     if torch is None:
         return pd.DataFrame(), pd.DataFrame(), "", []
 
-    features, targets, _, _, target_scaler = scaled_arrays(modeling, train, feature_columns)
+    features, targets, imputer, feature_scaler, target_scaler = scaled_arrays(
+        modeling, train, feature_columns
+    )
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(
+        {
+            "imputer": imputer,
+            "feature_scaler": feature_scaler,
+            "target_scaler": target_scaler,
+            "feature_columns": list(feature_columns),
+        },
+        MODELS_DIR / "preprocessors.joblib",
+    )
     metrics: list[dict] = []
     predictions = pd.DataFrame()
     model_metadata = []
 
     for model_name, spec in sequence_specs().items():
-        metadata, model_predictions, endpoint_indices = train_one_sequence_model(
+        metadata, model_predictions, endpoint_indices, best_state = train_one_sequence_model(
             model_name,
             spec,
             features,
@@ -538,6 +555,23 @@ def train_sequence_models(
             train,
             validation,
             test,
+        )
+        if best_state is not None:
+            torch.save(best_state, MODELS_DIR / f"{model_name}.pt")
+        spec_payload = {
+            "name": model_name,
+            "kind": spec["kind"],
+            "lookback": spec["lookback"],
+            "hidden_size": spec["hidden_size"],
+            "num_layers": spec["num_layers"],
+            "dropout": spec["dropout"],
+            "num_heads": spec.get("num_heads", 4),
+            "input_size": int(features.shape[1]),
+            "weights_file": f"{model_name}.pt",
+            "preprocessors_file": "preprocessors.joblib",
+        }
+        (MODELS_DIR / f"{model_name}.json").write_text(
+            json.dumps(spec_payload, indent=2), encoding="utf-8"
         )
         model_metadata.append(metadata)
         for split_name in ("validation", "test"):
@@ -718,6 +752,41 @@ def main() -> None:
         best_sequence_model,
         sequence_metadata,
     )
+
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    (MODELS_DIR / "feature_columns.json").write_text(
+        json.dumps(feature_columns, indent=2), encoding="utf-8"
+    )
+    manifest_models: list[dict] = []
+    for mlp_name in mlp_specs().keys():
+        if (MODELS_DIR / f"{mlp_name}.joblib").exists():
+            manifest_models.append(
+                {"name": mlp_name, "kind": "mlp", "file": f"{mlp_name}.joblib"}
+            )
+    for seq_name, seq_spec in sequence_specs().items():
+        if (MODELS_DIR / f"{seq_name}.pt").exists():
+            manifest_models.append(
+                {
+                    "name": seq_name,
+                    "kind": seq_spec["kind"],
+                    "weights_file": f"{seq_name}.pt",
+                    "spec_file": f"{seq_name}.json",
+                    "preprocessors_file": "preprocessors.joblib",
+                }
+            )
+    manifest = {
+        "family": "deep_learning",
+        "scenario": SCENARIO,
+        "target": TARGET_COLUMN,
+        "feature_columns_file": "feature_columns.json",
+        "train_window": {
+            "start": train[DATE_COLUMN].min().date().isoformat(),
+            "end": train[DATE_COLUMN].max().date().isoformat(),
+            "rows": int(len(train)),
+        },
+        "models": manifest_models,
+    }
+    (MODELS_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     predictions.insert(0, "scenario", SCENARIO)
     predictions.to_csv(PREDICTIONS_OUTPUT, index=False, date_format="%Y-%m-%d")

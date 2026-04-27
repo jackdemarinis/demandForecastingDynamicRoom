@@ -30,6 +30,32 @@ Static pricing simulation on unflagged 2025 days
 | Aggressive   | +$88,101.38    | 4.37% | +$4.15   |
 | Conservative | +$44,092.35    | 2.18% | +$2.08   |
 
+## Quick start: weights + live UI
+
+End-to-end path that produces real model weights on disk and launches the
+Streamlit demo (model + pricing UI) backed by them:
+
+```bash
+pip install -r requirements.txt
+
+# Build the modeling table (run once on raw exports / when data changes)
+python scripts/clean_new_operational_reports.py
+python -m src.features.build_guest_daily_enrichment
+python -m src.features.build_daily_modeling_table
+python -m src.evaluation.audit_modeling_data_quality
+
+# Train + persist weights (writes models/baselines/*.joblib and
+# models/deep_learning/*.{joblib,pt,json})
+python -m src.models.train_baselines
+python -m src.models.train_deep_learning
+
+# Launch the UI (forecast comparison + live inference + pricing)
+streamlit run app/streamlit_app.py
+```
+
+`models/` is gitignored; the training scripts above regenerate every
+artifact the UI's "Live inference + pricing" tab needs.
+
 ## Repository Layout
 
 ```
