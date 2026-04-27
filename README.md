@@ -56,6 +56,16 @@ streamlit run app/streamlit_app.py
 `models/` is gitignored; the training scripts above regenerate every
 artifact the UI's "Live inference + pricing" tab needs.
 
+The live tab can score historical dates in the modeling table and, for tabular
+persisted models such as XGBoost, Random Forest, Ridge, and MLP, future dates up
+to one year after the last observed row. Future scoring is recursive: the model
+uses calendar features plus lag/rolling features from the observed history, then
+uses earlier forecasts as history for later future days. Because future dates do
+not have realized hotel outcomes yet, actual rooms sold, historical ADR, and
+simulated-vs-historical revenue columns are blank for those rows. The forecast
+rooms, forecast occupancy, recommended ADR, and forecast revenue columns are the
+usable forward-looking outputs.
+
 ## Repository Layout
 
 ```

@@ -109,7 +109,7 @@ def apply_pricing_rule(
     forecast[DATE_COLUMN] = pd.to_datetime(forecast[DATE_COLUMN])
 
     modeling, _predictions, flags = load_inputs()
-    recommendations = modeling.merge(forecast, on=DATE_COLUMN, how="inner", validate="1:1")
+    recommendations = forecast.merge(modeling, on=DATE_COLUMN, how="left", validate="1:1")
     flag_notes = (
         flags.groupby(DATE_COLUMN)
         .agg(
@@ -121,12 +121,22 @@ def apply_pricing_rule(
     recommendations = recommendations.merge(flag_notes, on=DATE_COLUMN, how="left")
     recommendations["is_flagged_quality_row"] = recommendations["data_quality_flag_type"].notna().astype(int)
 
-    median_nonzero_adr = recommendations.loc[recommendations["block_adr_net"] > 0, "block_adr_net"].median()
+    property_total_rooms = modeling["property_total_rooms"].dropna().mode()
+    property_total_rooms = float(property_total_rooms.iloc[0]) if len(property_total_rooms) else 60.0
+    recommendations["property_total_rooms"] = recommendations["property_total_rooms"].fillna(property_total_rooms)
+
+    historical_nonzero_adr = modeling.loc[modeling["block_adr_net"] > 0, "block_adr_net"]
+    median_nonzero_adr = historical_nonzero_adr.median()
+    recent_nonzero_adr = historical_nonzero_adr.tail(28).median()
+    if pd.isna(recent_nonzero_adr):
+        recent_nonzero_adr = median_nonzero_adr
+
     reference_adr = recommendations["block_adr_net"].where(recommendations["block_adr_net"] > 0)
     reference_adr = reference_adr.fillna(recommendations["block_adr_net_rolling_28d_mean"])
     reference_adr = reference_adr.fillna(recommendations["block_adr_net_rolling_14d_mean"])
     reference_adr = reference_adr.fillna(recommendations["block_adr_net_lag_7d"])
     reference_adr = reference_adr.fillna(recommendations["block_adr_net_lag_1d"])
+    reference_adr = reference_adr.fillna(recent_nonzero_adr)
     reference_adr = reference_adr.where(reference_adr > 0, median_nonzero_adr)
 
     recommendations["pricing_model"] = model_name

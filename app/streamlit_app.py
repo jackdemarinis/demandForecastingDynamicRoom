@@ -1,4 +1,4 @@
-"""Streamlit demo UI for the CSC 561 hotel demand & pricing project.
+﻿"""Streamlit demo UI for the CSC 561 hotel demand & pricing project.
 
 Loads the real per-model prediction artifacts produced by the training
 pipeline and runs the real pricing module live for the chosen scenario.
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -89,16 +89,16 @@ def fmt_money(x: float) -> str:
 # --------------------------------------------------------------------------- #
 
 st.set_page_config(
-    page_title="Hotel Demand & Pricing — CSC 561",
+    page_title="Hotel Demand & Pricing â€” CSC 561",
     page_icon=None,
     layout="wide",
 )
 
 st.title("Hotel Demand Forecasting & Dynamic Pricing")
 st.caption(
-    "CSC 561 Final Project — Jack DeMarinis. "
+    "CSC 561 Final Project â€” Jack DeMarinis. "
     "Real predictions and pricing artifacts from the trained pipeline "
-    "(2023–2025 daily property data, chronological 2025 hold-out)."
+    "(2023â€“2025 daily property data, chronological 2025 hold-out)."
 )
 
 baseline_metrics = load_baseline_metrics()
@@ -122,7 +122,7 @@ with tab_overview:
     st.subheader("What this project does")
     st.markdown(
         """
-- Cleans real reservation, room-sales, and forecast exports (2023–2025) into
+- Cleans real reservation, room-sales, and forecast exports (2023â€“2025) into
   a 1,096-row daily modeling table (209 features).
 - Trains classical baselines (Ridge, Random Forest, XGBoost, naive / rolling
   / seasonal references) and deep sequence models (MLP, LSTM, GRU,
@@ -140,19 +140,19 @@ pricing module live. Nothing on this page is hard-coded.
         .loc[:, ["family", "model", "row_count", "mae", "rmse", "mape", "r2"]]
         .reset_index(drop=True)
     )
-    st.markdown("**All trained models — 2025 test metrics (sorted by MAE)**")
+    st.markdown("**All trained models â€” 2025 test metrics (sorted by MAE)**")
     st.dataframe(
         test_summary.style.format(
             {"mae": "{:.3f}", "rmse": "{:.3f}", "mape": "{:.3f}", "r2": "{:.3f}"}
         ),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
     if SCENARIO_COMPARISON.exists():
         st.markdown("**Pricing scenario comparison (saved artifact)**")
         st.dataframe(
-            pd.read_csv(SCENARIO_COMPARISON), use_container_width=True, hide_index=True
+            pd.read_csv(SCENARIO_COMPARISON), width="stretch", hide_index=True
         )
 
     if FINAL_PDF.exists():
@@ -185,7 +185,7 @@ with tab_models:
     c1.metric("MAE (rooms/day)", f"{chosen['mae']:.3f}")
     c2.metric("RMSE", f"{chosen['rmse']:.3f}")
     c3.metric("MAPE", f"{chosen['mape']:.3f}")
-    c4.metric("R²", f"{chosen['r2']:.3f}")
+    c4.metric("RÂ²", f"{chosen['r2']:.3f}")
 
     preds = model_predictions(chosen["model"], chosen["family"])
     test_preds = preds.loc[preds["split"].eq("test")].copy()
@@ -193,7 +193,7 @@ with tab_models:
     if test_preds.empty:
         st.warning("No saved test predictions for this model.")
     else:
-        st.markdown("**Actual vs predicted rooms sold — 2025 test set**")
+        st.markdown("**Actual vs predicted rooms sold â€” 2025 test set**")
         chart_df = test_preds.set_index("business_date")[["actual", "predicted"]]
         st.line_chart(chart_df, height=320)
 
@@ -204,7 +204,7 @@ with tab_models:
                 predicted=lambda d: d["predicted"].round(2),
                 absolute_error=lambda d: d["absolute_error"].round(2),
             ),
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
         )
 
@@ -224,7 +224,7 @@ with tab_pricing:
     st.caption(
         "Computed live by `src.pricing.build_pricing_recommendations."
         "build_recommendations(scenario)`. Recommended ADR is bounded to "
-        "$75–$350 with a max ±20% daily move from the reference ADR."
+        "$75â€“$350 with a max Â±20% daily move from the reference ADR."
     )
 
     scenario = st.radio(
@@ -232,8 +232,8 @@ with tab_pricing:
         options=["aggressive", "conservative"],
         horizontal=True,
         help=(
-            "Aggressive uses ±4 / ±8 / ±12 % demand-band moves. "
-            "Conservative uses ±2 / ±4 / ±6 %."
+            "Aggressive uses Â±4 / Â±8 / Â±12 % demand-band moves. "
+            "Conservative uses Â±2 / Â±4 / Â±6 %."
         ),
     )
 
@@ -246,7 +246,7 @@ with tab_pricing:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Test days (unflagged)", f"{sim['rows']:,}")
     c2.metric(
-        "Simulated revenue Δ",
+        "Simulated revenue Î”",
         fmt_money(sim["simulated_revenue_delta"]),
         f"{sim['simulated_revenue_delta_pct']:.2%}"
         if sim["simulated_revenue_delta_pct"] is not None
@@ -312,7 +312,7 @@ with tab_pricing:
             forecast_rooms_sold=lambda d: d["forecast_rooms_sold"].round(2),
             forecast_occupancy_rate=lambda d: (d["forecast_occupancy_rate"] * 100).round(1),
         ),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -334,8 +334,9 @@ with tab_live:
     st.subheader("Score any date with persisted model weights")
     st.caption(
         "Loads the actual fitted weights from `models/` and runs them through "
-        "`src.models.predict.predict_with_pricing`. Run the training scripts "
-        "first to populate `models/` (see Quick start in the README)."
+        "`src.models.predict.predict_with_pricing`. Future dates use recursive "
+        "lag/rolling features from the observed history, so actual outcome and "
+        "historical revenue columns stay blank until those dates exist in the data."
     )
 
     persisted = list_persisted_models()
@@ -350,6 +351,9 @@ with tab_live:
                                    parse_dates=["business_date"])
         min_date = modeling_df["business_date"].min().date()
         max_date = modeling_df["business_date"].max().date()
+        future_max_date = max_date + timedelta(days=365)
+        default_start = min(max(date.today(), max_date + timedelta(days=1)), future_max_date)
+        default_end = min(default_start + timedelta(days=13), future_max_date)
 
         labels = {
             f"{m['family']} / {m['name']}": m["name"] for m in persisted
@@ -374,9 +378,9 @@ with tab_live:
 
         live_range = st.date_input(
             "Date range to score",
-            value=(date(2025, 7, 1), date(2025, 7, 14)),
+            value=(default_start, default_end),
             min_value=min_date,
-            max_value=max_date,
+            max_value=future_max_date,
             key="live_range",
         )
         if isinstance(live_range, tuple) and len(live_range) == 2:
@@ -397,8 +401,9 @@ with tab_live:
             else:
                 if live_recs.empty:
                     st.warning(
-                        "No rows returned. Sequence models need a lookback window "
-                        "of unflagged days before the target date."
+                        "No rows returned. Sequence models need observed feature rows "
+                        "for their lookback window; use XGBoost, Random Forest, Ridge, "
+                        "or MLP for future-date scoring."
                     )
                 else:
                     c1, c2, c3, c4 = st.columns(4)
@@ -412,10 +417,8 @@ with tab_live:
                         f"{(live_recs['forecast_occupancy_rate'] * 100).mean():.1f}%",
                     )
                     c4.metric(
-                        "Sim. revenue Δ (vs historical)",
-                        fmt_money(
-                            float(live_recs["simulated_revenue_delta_at_actual_rooms"].sum())
-                        ),
+                        "Forecast revenue",
+                        fmt_money(float(live_recs["forecast_revenue_at_recommended_adr"].sum())),
                     )
 
                     st.markdown("**Forecast vs actual rooms sold**")
@@ -442,6 +445,7 @@ with tab_live:
                                 "recommended_adr",
                                 "historical_adr_net",
                                 "target_rooms_sold",
+                                "forecast_revenue_at_recommended_adr",
                                 "simulated_revenue_at_actual_rooms",
                                 "simulated_revenue_delta_at_actual_rooms",
                             ]
@@ -451,7 +455,7 @@ with tab_live:
                                 d["forecast_occupancy_rate"] * 100
                             ).round(1),
                         ),
-                        use_container_width=True,
+                        width="stretch",
                         hide_index=True,
                     )
 
