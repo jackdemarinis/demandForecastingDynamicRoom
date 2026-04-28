@@ -1,0 +1,4 @@
+source_file,source_sheet,source_row,report_period_start,report_period_end,property_total_rooms,business_date,occupancy_rate_reported,rooms_sold,transient_rooms,group_rooms,day_use_rooms,comp_rooms,out_of_order_rooms,on_market_rooms,room_revenue_gross,adr_gross,revpar_gross,room_revenue_net,adr_net,revpar_net,room_class,room_type_code
+EXAMPLE_BLOCK_FILE_A.xls,RoomSales,21,2024-01-01,2024-03-31,60,2024-01-01,0.5000,12,12,0,0,0,0,24,1500.00,125.0000,62.5000,1500.00,125.0000,62.5000,Standard,EXTYPEA
+EXAMPLE_BLOCK_FILE_A.xls,RoomSales,22,2024-01-01,2024-03-31,60,2024-01-01,0.3333,8,6,2,0,0,0,24,1200.00,150.0000,50.0000,1200.00,150.0000,50.0000,Standard,EXTYPEB
+EXAMPLE_BLOCK_FILE_A.xls,RoomSales,23,2024-01-01,2024-03-31,60,2024-01-01,0.3333,4,2,2,0,0,0,12,800.00,200.0000,66.6667,800.00,200.0000,66.6667,Suite,EXTYPEC

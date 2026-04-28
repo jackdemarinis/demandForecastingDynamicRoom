@@ -69,10 +69,11 @@ usable forward-looking outputs.
 ## Repository Layout
 
 ```
-Data/                         raw operational workbooks (input)
+Data/                         raw operational workbooks (input, gitignored — private)
 Documents/                    project proposal and assignment
-cleaned_data/                 cleaned operational datasets
-processed_data/               daily modeling table + enrichment
+cleaned_data/                 cleaned operational datasets (gitignored — private)
+processed_data/               daily modeling table + enrichment (gitignored — private)
+data_examples/                sanitized synthetic schema samples (public)
 scripts/
   clean_new_operational_reports.py
 src/
@@ -193,13 +194,26 @@ distribution effects.
   high-demand examples.
 - `reports/final/final_report_ieee.pdf` — IEEE-format report.
 
-## Privacy
+## Privacy and Data Availability
 
-GuestNameList exports contain PII (names, emails, comments, confirmation
-and folio numbers). These fields are used only for cleaning and
-deduplication and are explicitly excluded from modeling features. The
-daily enrichment output aggregates to non-identifying daily counts,
-shares, and rates.
+The raw operational workbooks (`Data/`) and the cleaned and processed
+CSVs derived from them (`cleaned_data/`, `processed_data/`) are **not
+publicly available**. They contain commercially sensitive single-property
+revenue history and guest PII (names, emails, comments, confirmation and
+folio numbers) drawn from the property's reservation system, so all three
+folders are excluded from this repository via `.gitignore`.
+
+PII columns are used only for cleaning and deduplication during pipeline
+execution and are explicitly excluded from modeling features. The daily
+enrichment output aggregates to non-identifying daily counts, shares, and
+rates.
+
+To make the pipeline inspectable without redistributing the underlying
+data, the `data_examples/` folder ships **sanitized synthetic CSVs** that
+share only the column schema of each cleaned and processed file. Every
+value in those examples is fabricated. See `data_examples/README.md` and
+the "Sanitized Data Schema Examples" appendix in the IEEE report for the
+file-by-file mapping.
 
 ## Limitations
 

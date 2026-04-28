@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm *)",
+      "Bash(pdflatex -interaction=nonstopmode final_report_ieee.tex)",
+      "PowerShell(Get-Command pdflatex -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command latexmk -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command miktex -ErrorAction SilentlyContinue)",
+      "PowerShell($paths = @\\(\"$env:LOCALAPPDATA\\\\Programs\\\\MiKTeX\\\\miktex\\\\bin\\\\x64\\\\pdflatex.exe\",\"C:\\\\texlive\\\\2024\\\\bin\\\\windows\\\\pdflatex.exe\",\"C:\\\\texlive\\\\2025\\\\bin\\\\windows\\\\pdflatex.exe\",\"$env:USERPROFILE\\\\AppData\\\\Local\\\\Programs\\\\MiKTeX\\\\miktex\\\\bin\\\\x64\\\\pdflatex.exe\",\"C:\\\\Program Files\\\\MiKTeX\\\\miktex\\\\bin\\\\x64\\\\pdflatex.exe\"\\); foreach \\($p in $paths\\) { if \\(Test-Path $p\\) { $p } })",
+      "PowerShell(\"Done\")",
+      "PowerShell(where.exe tectonic 2>$null; Get-ChildItem -Path \"$env:USERPROFILE\" -Filter \"tectonic.exe\" -Recurse -ErrorAction SilentlyContinue -Force -Depth 6 | Select-Object FullName | Select-Object -First 5)",
+      "PowerShell($found = Get-ChildItem -Path \"C:\\\\\" -Filter \"tectonic.exe\" -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 5; $found.FullName)",
+      "Bash(\"/c/Users/jackf/.codex/.tmp/bundled-marketplaces/openai-bundled/plugins/latex-tectonic/bin/tectonic.exe\" --version)",
+      "Bash(\"/c/Users/jackf/.codex/.tmp/bundled-marketplaces/openai-bundled/plugins/latex-tectonic/bin/tectonic.exe\" -X compile final_report_ieee.tex)"
+    ]
+  }
+}

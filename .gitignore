@@ -4,3 +4,9 @@ __pycache__/
 .venv/
 .DS_Store
 /models/
+
+# Private hotel operational data — not redistributable.
+# See data_examples/ for sanitized schema samples.
+/Data/
+/cleaned_data/
+/processed_data/

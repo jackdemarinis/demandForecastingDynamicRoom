@@ -1,0 +1,2 @@
+source_file,source_sheet,source_row,report_period_start,report_period_end,property_total_rooms,business_date,adjustment_label_raw,occupancy_rate_reported,occupancy_rate_raw_values_observed,source_occurrences,merged_source_rows,rooms_sold,transient_rooms,group_rooms,day_use_rooms,comp_rooms,out_of_order_rooms,on_market_rooms,room_revenue_gross,adr_gross,revpar_gross,room_revenue_net,adr_net,revpar_net
+EXAMPLE_BLOCK_FILE_A.xls,RoomSales,298,2024-01-01,2024-03-31,60,2024-01-15,***,,0.0|1.7976931348623157e+308,2,298|299,0,0,0,0,0,0,0,500.00,0.0,0.0,500.00,0.0,0.0

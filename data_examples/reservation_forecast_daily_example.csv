@@ -1,0 +1,3 @@
+source_file,source_sheet,source_row,report_period_start,report_period_end,business_date,arrivals,departures,stayovers,projected_walk_ins,projected_cxl_no_show_rate,rooms_sold,total_comp_rooms,out_of_order_rooms,occupancy_rate_reported,room_revenue_net,adr_reported,revpar_reported,transient_rooms,group_rooms_picked_up,group_rooms_not_picked_up,group_room_revenue_net,group_adr_reported,group_non_gtd_arrivals,group_gtd_arrivals,group_comp_rooms,total_group_guests_in_house
+EXAMPLE_RESFORECAST.xls,ReservationForecast,10,2024-01-01,2024-12-31,2024-01-01,15,40,5,0,0.0,24,0,0,0.40,3000.00,125.0,50.0,20,4,0,500.00,125.0,0,4,0,8
+EXAMPLE_RESFORECAST.xls,ReservationForecast,11,2024-01-01,2024-12-31,2024-01-02,18,12,12,0,0.0,30,0,0,0.50,4200.00,140.0,70.0,28,2,0,250.00,125.0,0,2,0,4
