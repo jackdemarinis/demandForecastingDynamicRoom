@@ -17,7 +17,7 @@ SCENARIO = "exclude_all_flagged"
 SPLIT = "test"
 COMPARISONS = [
     ("random_forest",          "tree_baseline"),
-    ("gru_56d_wide",           "best_gru"),
+    ("gru_42d_balanced",       "best_gru"),
     ("transformer_28d_small",  "best_transformer"),
     ("lstm_56d_regularized",   "best_lstm"),
     ("mlp_medium",             "best_mlp"),

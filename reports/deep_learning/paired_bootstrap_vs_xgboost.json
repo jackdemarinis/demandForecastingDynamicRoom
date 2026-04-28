@@ -19,13 +19,13 @@
     },
     {
       "comparison": "best_gru",
-      "model": "gru_56d_wide",
+      "model": "gru_42d_balanced",
       "n_rows": 354,
       "xgboost_mae": 7.4434,
-      "other_mae": 7.8128,
-      "delta_mae_other_minus_xgb": 0.3694,
-      "ci_low_95": -0.2034,
-      "ci_high_95": 0.9246,
+      "other_mae": 7.8435,
+      "delta_mae_other_minus_xgb": 0.4001,
+      "ci_low_95": -0.1581,
+      "ci_high_95": 0.9457,
       "ci_excludes_zero": false
     },
     {
@@ -33,10 +33,10 @@
       "model": "transformer_28d_small",
       "n_rows": 354,
       "xgboost_mae": 7.4434,
-      "other_mae": 7.835,
-      "delta_mae_other_minus_xgb": 0.3916,
-      "ci_low_95": -0.2148,
-      "ci_high_95": 0.9778,
+      "other_mae": 7.5496,
+      "delta_mae_other_minus_xgb": 0.1063,
+      "ci_low_95": -0.4685,
+      "ci_high_95": 0.6738,
       "ci_excludes_zero": false
     },
     {
@@ -44,10 +44,10 @@
       "model": "lstm_56d_regularized",
       "n_rows": 354,
       "xgboost_mae": 7.4434,
-      "other_mae": 8.662,
-      "delta_mae_other_minus_xgb": 1.2186,
-      "ci_low_95": 0.6561,
-      "ci_high_95": 1.7887,
+      "other_mae": 8.8748,
+      "delta_mae_other_minus_xgb": 1.4315,
+      "ci_low_95": 0.8641,
+      "ci_high_95": 2.0132,
       "ci_excludes_zero": true
     },
     {

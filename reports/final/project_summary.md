@@ -63,14 +63,14 @@ Exclude-all-flagged 2025 test comparison:
 | --- | --- | --- | --- | --- |
 | xgboost | 354 | 7.443 | 9.927 | 0.585 |
 | random_forest | 354 | 7.466 | 9.834 | 0.593 |
-| gru_56d_wide | 354 | 7.813 | 10.588 | 0.528 |
-| gru_56d_more_regularized | 354 | 7.822 | 10.616 | 0.525 |
-| transformer_28d_small | 354 | 7.835 | 10.305 | 0.553 |
-| gru_42d_balanced | 354 | 7.937 | 10.587 | 0.528 |
-| transformer_56d_regularized | 354 | 7.945 | 10.561 | 0.530 |
-| gru_84d_compact | 354 | 8.380 | 10.784 | 0.510 |
+| transformer_28d_small | 354 | 7.550 | 9.947 | 0.583 |
+| gru_42d_balanced | 354 | 7.843 | 10.548 | 0.531 |
+| transformer_56d_regularized | 354 | 7.852 | 10.419 | 0.543 |
+| gru_56d_wide | 354 | 7.854 | 10.590 | 0.528 |
+| gru_56d_more_regularized | 354 | 7.862 | 10.587 | 0.528 |
+| gru_84d_compact | 354 | 8.277 | 10.684 | 0.519 |
 
-The best neural-network model is `gru_56d_wide` with MAE 7.813, RMSE 10.588, and R2 0.528. It does not beat the best overall comparison model, `xgboost` (MAE 7.443).
+The best neural-network model is `transformer_28d_small` with MAE 7.550, RMSE 9.947, and R2 0.583. It does not beat the best overall comparison model, `xgboost` (MAE 7.443).
 
 This supports the interpretation that sequence neural networks can get close on this daily demand task, but tree-based tabular models still generalize slightly better on the small dataset. The MLP variants remain materially weaker than the LSTM, GRU, and Transformer variants.
 

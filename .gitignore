@@ -10,3 +10,6 @@ __pycache__/
 /Data/
 /cleaned_data/
 /processed_data/
+
+# LaTeX source for the final report (PDF is tracked).
+/reports/final/final_report_ieee.tex

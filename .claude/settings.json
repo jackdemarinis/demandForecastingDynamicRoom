@@ -11,7 +11,8 @@
       "PowerShell(where.exe tectonic 2>$null; Get-ChildItem -Path \"$env:USERPROFILE\" -Filter \"tectonic.exe\" -Recurse -ErrorAction SilentlyContinue -Force -Depth 6 | Select-Object FullName | Select-Object -First 5)",
       "PowerShell($found = Get-ChildItem -Path \"C:\\\\\" -Filter \"tectonic.exe\" -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 5; $found.FullName)",
       "Bash(\"/c/Users/jackf/.codex/.tmp/bundled-marketplaces/openai-bundled/plugins/latex-tectonic/bin/tectonic.exe\" --version)",
-      "Bash(\"/c/Users/jackf/.codex/.tmp/bundled-marketplaces/openai-bundled/plugins/latex-tectonic/bin/tectonic.exe\" -X compile final_report_ieee.tex)"
+      "Bash(\"/c/Users/jackf/.codex/.tmp/bundled-marketplaces/openai-bundled/plugins/latex-tectonic/bin/tectonic.exe\" -X compile final_report_ieee.tex)",
+      "Bash(python -m src.evaluation.run_paired_bootstrap)"
     ]
   }
 }

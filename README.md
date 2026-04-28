@@ -19,8 +19,8 @@ Best forecasting model on the unflagged 2025 test period
 |--------------------|-------|--------|-------|
 | **XGBoost**        | 7.443 | 9.927  | 0.585 |
 | Random Forest      | 7.466 | 9.834  | 0.593 |
-| GRU 56d (wide)     | 7.813 | 10.588 | 0.528 |
-| Transformer 28d    | 7.835 | 10.305 | 0.553 |
+| Transformer 28d    | 7.550 | 9.947  | 0.583 |
+| GRU 42d            | 7.843 | 10.548 | 0.531 |
 
 Static pricing simulation on unflagged 2025 days
 (realized rooms sold held fixed):
